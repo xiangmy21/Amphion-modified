@@ -231,6 +231,9 @@ class TransformerEncoder(nn.Module):
             x = self.last_ln(x, condition)
         else:
             x = self.last_ln(x)
+        
+        if torch.isnan(x).any():
+            breakpoint()
 
         return x
 
@@ -304,6 +307,8 @@ class DurationPredictor(nn.Module):
 
         for idx, (conv, act, ln, dropout) in enumerate(self.conv):
             res = x
+            if torch.isnan(x).any():
+                breakpoint()
             # print(torch.min(x), torch.max(x))
             if idx % self.cross_attn_per_layer == 0:
                 attn_idx = idx // self.cross_attn_per_layer
@@ -326,11 +331,18 @@ class DurationPredictor(nn.Module):
                 y_ = (y_ + attn_res) / math.sqrt(2.0)
 
                 x = y_.transpose(1, 2)
-
+            if torch.isnan(x).any():
+                breakpoint()
             x = conv(x)
+            if torch.isnan(x).any():
+                breakpoint()
             # print(torch.min(x), torch.max(x))
             x = act(x)
+            if torch.isnan(x).any():
+                breakpoint()
             x = ln(x.transpose(1, 2))
+            if torch.isnan(x).any():
+                breakpoint()
             # print(torch.min(x), torch.max(x))
             x = x.transpose(1, 2)
 
@@ -347,6 +359,10 @@ class DurationPredictor(nn.Module):
 
         dur_pred = x.exp() - 1
         dur_pred_round = torch.clamp(torch.round(x.exp() - 1), min=0).long()
+
+        # print("-------------------dur_pred_round--------------------")
+        # print(dur_pred_round)
+        # print("++++++++++++++++++++++++++++++++++++++++++++++++++++")
 
         return {
             "dur_pred_log": x,

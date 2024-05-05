@@ -52,6 +52,7 @@ def extract_utt_acoustic_features_parallel(metadata, dataset_output, cfg, n_work
 
 def avg_phone_feature(feature, duration, interpolation=False):
     feature = feature[: sum(duration)]
+    
     if interpolation:
         nonzero_ids = np.where(feature != 0)[0]
         interp_fn = interp1d(
@@ -220,7 +221,8 @@ def __extract_utt_acoustic_features(dataset_output, cfg, utt):
                     dataset_output, cfg.preprocess.acoustic_token_dir, uid, codes
                 )
 
-
+ZeroCount = 0
+TotalCount = 0
 # TODO: refactor extract_utt_acoustic_features_task function due to many duplicated code
 def extract_utt_acoustic_features_tts(dataset_output, cfg, utt):
     """Extract acoustic features from utterances (in single process)
@@ -236,22 +238,25 @@ def extract_utt_acoustic_features_tts(dataset_output, cfg, utt):
 
     uid = utt["Uid"]
     wav_path = utt["Path"]
-    if os.path.exists(os.path.join(dataset_output, cfg.preprocess.raw_data)):
-        wav_path = os.path.join(
-            dataset_output, cfg.preprocess.raw_data, utt["Singer"], uid + ".wav"
-        )
-        if not os.path.exists(wav_path):
-            wav_path = os.path.join(
-                dataset_output, cfg.preprocess.raw_data, utt["Singer"], uid + ".flac"
-            )
+    # print("uid:", uid)
+    # print("wav_path", wav_path)
+    # if os.path.exists(os.path.join(dataset_output, cfg.preprocess.raw_data)):
+    #     wav_path = os.path.join(
+    #         dataset_output, cfg.preprocess.raw_data, utt["Singer"], uid + ".wav"
+    #     )
+    #     if not os.path.exists(wav_path):
+    #         wav_path = os.path.join(
+    #             dataset_output, cfg.preprocess.raw_data, utt["Singer"], uid + ".flac"
+    #         )
 
-        assert os.path.exists(wav_path)
+    #     assert os.path.exists(wav_path)
 
     with torch.no_grad():
         # Load audio data into tensor with sample rate of the config file
         wav_torch, _ = audio.load_audio_torch(wav_path, cfg.preprocess.sample_rate)
         wav = wav_torch.cpu().numpy()
-
+        if len(wav) < cfg.preprocess.sample_rate*2 :
+            return
         # extract features
         if cfg.preprocess.extract_duration:
             durations, phones, start, end = duration.get_duration(
@@ -327,19 +332,31 @@ def extract_utt_acoustic_features_tts(dataset_output, cfg, utt):
             save_feature(dataset_output, cfg.preprocess.energy_dir, uid, energy)
 
         if cfg.preprocess.extract_pitch:
+            # print("wav_length:", len(wav))
+            # print("wav: ", wav)
             pitch = f0.get_f0(wav, cfg.preprocess)
-            if cfg.preprocess.extract_duration:
-                pitch = pitch[: sum(durations)]
-                phone_pitch = avg_phone_feature(pitch, durations, interpolation=True)
-                save_feature(
-                    dataset_output, cfg.preprocess.phone_pitch_dir, uid, phone_pitch
-                )
-            save_feature(dataset_output, cfg.preprocess.pitch_dir, uid, pitch)
+            # print("pitch: ", pitch)
+            num_zeros = len(pitch) - np.count_nonzero(pitch)
+            # print("zeros ratio: ", str(num_zeros) + "/" + str(len(pitch)), "%.2f"%(num_zeros/len(pitch)))
+            # global TotalCount, ZeroCount
+            # TotalCount += 1
+            # if num_zeros == len(pitch):
+            #     ZeroCount += 1
+            # print("%d/%d"%(ZeroCount, TotalCount))
+            if num_zeros != len(pitch):
+            
+                if cfg.preprocess.extract_duration:
+                    pitch = pitch[: sum(durations)]
+                    phone_pitch = avg_phone_feature(pitch, durations, interpolation=True)
+                    save_feature(
+                        dataset_output, cfg.preprocess.phone_pitch_dir, uid, phone_pitch
+                    )
+                save_feature(dataset_output, cfg.preprocess.pitch_dir, uid, pitch)
 
-            if cfg.preprocess.extract_uv:
-                assert isinstance(pitch, np.ndarray)
-                uv = pitch != 0
-                save_feature(dataset_output, cfg.preprocess.uv_dir, uid, uv)
+                if cfg.preprocess.extract_uv:
+                    assert isinstance(pitch, np.ndarray)
+                    uv = pitch != 0
+                    save_feature(dataset_output, cfg.preprocess.uv_dir, uid, uv)
 
         if cfg.preprocess.extract_audio:
             save_torch_audio(
@@ -697,7 +714,7 @@ def cal_pitch_statistics(dataset, output_path, cfg):
         # pitch = total_pitch[total_pitch != 0]
         if cfg.preprocess.pitch_remove_outlier:
             pitch = remove_outlier(total_pitch)
-        spkid = singers[f"{replace_augment_name(dataset)}_{singer}"]
+        spkid = singers[singer]
 
         # update pitch scalers
         pitch_scalers[spkid].extend(pitch.tolist())

@@ -16,9 +16,11 @@ export PYTHONIOENCODING=UTF-8
 exp_config="$exp_dir/exp_config.json"
 exp_name="ns2_libritts"
 
+# python bins/tts/preprocess.py --config=/home/srt15/amphion/egs/tts/NaturalSpeech2/exp_config.json
+
 ######## Train Model ###########
-CUDA_VISIBLE_DEVICES="0" accelerate \
+CUDA_VISIBLE_DEVICES="1" python \
     "${work_dir}"/bins/tts/train.py \
     --config=$exp_config \
     --exp_name=$exp_name \
-    --log_level debug \
+    --log_level debug

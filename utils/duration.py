@@ -59,20 +59,22 @@ def get_duration(utt, wav, cfg):
     dataset = utt["Dataset"]
     sample_rate = cfg["sample_rate"]
 
+    distribution, _, paragraph, uid = basename.split("#")
+
     # print(cfg.processed_dir, dataset, speaker, basename)
-    wav_path = os.path.join(
-        cfg.processed_dir, dataset, "raw_data", speaker, "{}.wav".format(basename)
-    )
-    text_path = os.path.join(
-        cfg.processed_dir, dataset, "raw_data", speaker, "{}.lab".format(basename)
-    )
+    # wav_path = os.path.join(
+    #     cfg.processed_dir, dataset, "raw_data", speaker, "{}.wav".format(basename)
+    # )
+    # text_path = os.path.join(
+    #     cfg.processed_dir, dataset, "raw_data", speaker, "{}.lab".format(basename)
+    # )
     tg_path = os.path.join(
-        cfg.processed_dir, dataset, "TextGrid", speaker, "{}.TextGrid".format(basename)
+        cfg.processed_dir, dataset, "TextGrid", distribution, speaker, paragraph, "{}.TextGrid".format(uid)
     )
 
-    # Read raw text
-    with open(text_path, "r") as f:
-        raw_text = f.readline().strip("\n")
+    # # Read raw text
+    # with open(text_path, "r") as f:
+    #     raw_text = f.readline().strip("\n")
 
     # Get alignments
     textgrid = tgt.io.read_textgrid(tg_path)
@@ -80,6 +82,7 @@ def get_duration(utt, wav, cfg):
         textgrid.get_tier_by_name("phones"), cfg
     )
     text = "{" + " ".join(phone) + "}"
+    # print(duration, text)
     if start >= end:
         return None
 

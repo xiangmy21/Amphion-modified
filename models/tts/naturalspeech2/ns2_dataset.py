@@ -26,6 +26,7 @@ class NS2Dataset(torch.utils.data.Dataset):
         assert isinstance(dataset, str)
 
         processed_data_dir = os.path.join(cfg.preprocess.processed_dir, dataset)
+        print("$$$$$ processced_data_dir: ",processed_data_dir)
 
         meta_file = cfg.preprocess.valid_file if is_valid else cfg.preprocess.train_file
         # train.json
@@ -48,7 +49,7 @@ class NS2Dataset(torch.utils.data.Dataset):
                     cfg.preprocess.processed_dir,
                     dataset,
                     cfg.preprocess.melspec_dir,  # mel
-                    utt_info["speaker"],
+                    utt_info["Singer"],
                     uid + ".npy",
                 )
 
@@ -64,7 +65,6 @@ class NS2Dataset(torch.utils.data.Dataset):
                     cfg.preprocess.processed_dir,
                     dataset,
                     cfg.preprocess.code_dir,  # code
-                    utt_info["speaker"],
                     uid + ".npy",
                 )
 
@@ -76,7 +76,7 @@ class NS2Dataset(torch.utils.data.Dataset):
                 uid = utt_info["Uid"]
                 utt = "{}_{}".format(dataset, uid)
 
-                self.utt2spkid[utt] = utt_info["speaker"]
+                self.utt2spkid[utt] = utt_info["Singer"]
 
         assert cfg.preprocess.use_pitch == True
         if cfg.preprocess.use_pitch:
@@ -90,7 +90,6 @@ class NS2Dataset(torch.utils.data.Dataset):
                     cfg.preprocess.processed_dir,
                     dataset,
                     cfg.preprocess.pitch_dir,  # pitch
-                    utt_info["speaker"],
                     uid + ".npy",
                 )
 
@@ -106,29 +105,33 @@ class NS2Dataset(torch.utils.data.Dataset):
                     cfg.preprocess.processed_dir,
                     dataset,
                     cfg.preprocess.duration_dir,  # duration
-                    utt_info["speaker"],
                     uid + ".npy",
                 )
 
         assert cfg.preprocess.use_phone == True
         if cfg.preprocess.use_phone:
-            self.utt2phone = {}
+            self.utt2phone_path = {}
             for utt_info in self.metadata:
                 dataset = utt_info["Dataset"]
                 uid = utt_info["Uid"]
                 utt = "{}_{}".format(dataset, uid)
 
-                self.utt2phone[utt] = utt_info["phones"]
+                self.utt2phone_path[utt] = os.path.join(
+                    cfg.preprocess.processed_dir, # data
+                    dataset, # libritts
+                    cfg.preprocess.phone_dir, # phones
+                    uid + ".phone" # train-clean-100#19#198#19_198_000000_000000.phone
+                )
 
-        assert cfg.preprocess.use_len == True
-        if cfg.preprocess.use_len:
-            self.utt2len = {}
-            for utt_info in self.metadata:
-                dataset = utt_info["Dataset"]
-                uid = utt_info["Uid"]
-                utt = "{}_{}".format(dataset, uid)
+        # assert cfg.preprocess.use_len == True
+        # if cfg.preprocess.use_len:
+        #     self.utt2len = {}
+        #     for utt_info in self.metadata:
+        #         dataset = utt_info["Dataset"]
+        #         uid = utt_info["Uid"]
+        #         utt = "{}_{}".format(dataset, uid)
 
-                self.utt2len[utt] = utt_info["num_frames"]
+        #         self.utt2len[utt] = int(utt_info["Duration"]*(cfg.preprocess.sample_rate//self.cfg.preprocess.codec_hop_size))
 
         # for cross reference
         if cfg.preprocess.use_cross_reference:
@@ -137,7 +140,7 @@ class NS2Dataset(torch.utils.data.Dataset):
                 dataset = utt_info["Dataset"]
                 uid = utt_info["Uid"]
                 utt = "{}_{}".format(dataset, uid)
-                spkid = utt_info["speaker"]
+                spkid = utt_info["Singer"]
                 if spkid not in self.spkid2utt:
                     self.spkid2utt[spkid] = []
                 self.spkid2utt[spkid].append(utt)
@@ -147,7 +150,7 @@ class NS2Dataset(torch.utils.data.Dataset):
 
         self.all_num_frames = []
         for i in range(len(self.metadata)):
-            self.all_num_frames.append(self.metadata[i]["num_frames"])
+            self.all_num_frames.append(int(self.metadata[i]["Duration"]*(cfg.preprocess.sample_rate//self.cfg.preprocess.codec_hop_size)))
         self.num_frame_sorted = np.array(sorted(self.all_num_frames))
         self.num_frame_indices = np.array(
             sorted(
@@ -189,7 +192,7 @@ class NS2Dataset(torch.utils.data.Dataset):
                 self.cfg.preprocess.processed_dir,
                 self.cfg.preprocess.metadata_dir,
                 dataset,
-                # utt_info["speaker"],
+                # utt_info["Singer"],
                 uid + ".pkl",
             )
             with open(metadata_uid_path, "rb") as f:
@@ -221,15 +224,19 @@ class NS2Dataset(torch.utils.data.Dataset):
             pitch = np.load(self.utt2pitch_path[utt])
             # duration
             duration = np.load(self.utt2duration_path[utt])
-            # phone_id
+            # duration = (duration * self.cfg.preprocess.sample_rate / self.cfg.preprocess.codec_hop_size).astype(int)
+            with open(self.utt2phone_path[utt]) as f:
+                phone = f.readline().replace("{", "").replace("}", "").split()
             phone_id = np.array(
                 [
                     *map(
                         self.phone2id.get,
-                        self.utt2phone[utt].replace("{", "").replace("}", "").split(),
+                        phone.split(),
                     )
                 ]
             )
+            # print(phone)
+            # print(phone_id)
 
         # align length
         code, pitch, duration, phone_id, frame_nums = self.align_length(
@@ -283,7 +290,10 @@ class NS2Dataset(torch.utils.data.Dataset):
 
     def get_num_frames(self, index):
         utt_info = self.metadata[index]
-        return utt_info["num_frames"]
+        return int(
+            utt_info["Duration"]
+            * (self.cfg.preprocess.sample_rate // self.cfg.preprocess.codec_hop_size)
+        )
 
     def align_length(self, code, pitch, duration, phone_id, frame_nums):
         # aligh lenght of code, pitch, duration, phone_id, and frame nums
@@ -310,7 +320,7 @@ class NS2Dataset(torch.utils.data.Dataset):
             int(phone_nums * 0.1), int(phone_nums * 0.5) + 1
         )
         clip_phone_nums = max(clip_phone_nums, 1)
-        assert clip_phone_nums < phone_nums and clip_phone_nums >= 1
+        assert clip_phone_nums <= phone_nums and clip_phone_nums >= 1
         if self.cfg.preprocess.clip_mode == "mid":
             start_idx = np.random.randint(0, phone_nums - clip_phone_nums)
         elif self.cfg.preprocess.clip_mode == "start":

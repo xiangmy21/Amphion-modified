@@ -71,7 +71,7 @@ class TTSTrainer(BaseTrainer):
 
         # Check values
         if self.accelerator.is_main_process:
-            self.__check_basic_configs()
+            self._check_basic_configs()
             # Set runtime configs
             self.save_checkpoint_stride = self.cfg.train.save_checkpoint_stride
             self.checkpoints_path = [
@@ -113,7 +113,7 @@ class TTSTrainer(BaseTrainer):
             self.logger.debug(self.model)
             self.logger.info(f"Building model done in {(end - start) / 1e6:.2f}ms")
             self.logger.info(
-                f"Model parameters: {self.__count_parameters(self.model)/1e6:.2f}M"
+                f"Model parameters: {self._count_parameters(self.model)/1e6:.2f}M"
             )
 
         # optimizer & scheduler
@@ -328,7 +328,7 @@ class TTSTrainer(BaseTrainer):
         self.accelerator.wait_for_everyone()
         # dump config file
         if self.accelerator.is_main_process:
-            self.__dump_cfg(self.config_save_path)
+            self._dump_cfg(self.config_save_path)
 
         # self.optimizer.zero_grad()
         # Wait to ensure good to go
@@ -595,7 +595,7 @@ class TTSTrainer(BaseTrainer):
                 f"Invalid gradient_accumulation_step value: {self.cfg.train.gradient_accumulation_step}. It should be positive."
             )
 
-    def __dump_cfg(self, path):
+    def _dump_cfg(self, path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         json5.dump(
             self.cfg,
@@ -606,7 +606,7 @@ class TTSTrainer(BaseTrainer):
             quote_keys=True,
         )
 
-    def __check_basic_configs(self):
+    def _check_basic_configs(self):
         if self.cfg.train.gradient_accumulation_step <= 0:
             self.logger.fatal("Invalid gradient_accumulation_step value!")
             self.logger.error(
@@ -619,7 +619,7 @@ class TTSTrainer(BaseTrainer):
         # TODO: check other values
 
     @staticmethod
-    def __count_parameters(model):
+    def _count_parameters(model):
         model_param = 0.0
         if isinstance(model, dict):
             for key, value in model.items():

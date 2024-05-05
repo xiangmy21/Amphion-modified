@@ -4,6 +4,7 @@
     "dataset": [
         "libritts"
     ],
+    "task_type": "tts",
     "preprocess": {
         "use_mel": false,
         "use_code": true,
@@ -13,15 +14,22 @@
         "use_phone": true,
         "use_len": true,
         "use_cross_reference": true,
-        "train_file": "train.json",
-        "valid_file": "test.json",
         "melspec_dir": "mel",
         "code_dir": "code",
         "pitch_dir": "pitch",
         "duration_dir": "duration",
+        "phone_dir": "phone",
         "metadata_dir": "metadata",
-        "read_metadata": true,
-        "clip_mode": "start"
+        "extract_duration": true,
+        "extract_phone": true,
+        "phone_extractor": "lexicon",
+        "sample_rate": 24000,
+        "codec_hop_size": 320,
+        "extract_pitch": true,
+        "f0_min": 50,
+        "f0_max": 1100,
+        "pitch_bin": 256,
+        "pitch_extractor": "dio"
     },
     "model": {
         "latent_dim": 128,

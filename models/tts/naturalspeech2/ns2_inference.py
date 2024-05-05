@@ -60,8 +60,9 @@ class NS2Inference:
 
         with torch.no_grad():
             encoded_frames = self.codec.encode(ref_wav)
+            print("encoded_frames[0]: ", encoded_frames[0][0].shape)
             ref_code = torch.cat([encoded[0] for encoded in encoded_frames], dim=-1)
-        # print(ref_code.shape)
+        print("ref_code: ", ref_code.shape)
 
         ref_mask = torch.ones(ref_code.shape[0], ref_code.shape[-1]).to(ref_code.device)
         # print(ref_mask.shape)
@@ -102,7 +103,7 @@ class NS2Inference:
 
         sf.write(
             "{}/{}.wav".format(
-                self.args.output_dir, self.args.text.replace(" ", "_", 100)
+                self.args.output_dir, "out_"+self.args.ref_audio.split('/')[-1].split('.')[0]
             ),
             rec_wav[0, 0].detach().cpu().numpy(),
             samplerate=24000,

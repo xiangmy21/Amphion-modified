@@ -77,6 +77,7 @@ def main():
     args = parser.parse_args()
     cfg = load_config(args.config)
 
+    print("where6?")
     # Data Augmentation
     if (
         type(cfg.preprocess.data_augment) == list
@@ -86,22 +87,29 @@ def main():
         for dataset in cfg.preprocess.data_augment:
             new_datasets = [
                 f"{dataset}_pitch_shift" if cfg.preprocess.use_pitch_shift else None,
-                f"{dataset}_formant_shift"
-                if cfg.preprocess.use_formant_shift
-                else None,
+                (
+                    f"{dataset}_formant_shift"
+                    if cfg.preprocess.use_formant_shift
+                    else None
+                ),
                 f"{dataset}_equalizer" if cfg.preprocess.use_equalizer else None,
                 f"{dataset}_time_stretch" if cfg.preprocess.use_time_stretch else None,
             ]
             new_datasets_list.extend(filter(None, new_datasets))
         cfg.dataset.extend(new_datasets_list)
 
+    print("where7?")
     # # CUDA settings
     cuda_relevant()
 
+    print("where8?")
     # Build trainer
     trainer = build_trainer(args, cfg)
+    print("where9?")
     torch.set_num_threads(1)
+    print("where10?")
     torch.set_num_interop_threads(1)
+    print("where11?")
     trainer.train_loop()
 
 

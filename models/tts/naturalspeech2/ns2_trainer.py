@@ -399,10 +399,10 @@ class NS2Trainer(TTSTrainer):
         self.scheduler.load_state_dict(checkpoint["scheduler"])
 
     def _train_step(self, batch):
+        print("_train_step")
         train_losses = {}
         total_loss = 0
         train_stats = {}
-
         code = batch["code"]  # (B, 16, T)
         pitch = batch["pitch"]  # (B, T)
         duration = batch["duration"]  # (B, N)
@@ -411,7 +411,6 @@ class NS2Trainer(TTSTrainer):
         phone_mask = batch["phone_mask"]  # (B, N)
         mask = batch["mask"]  # (B, T)
         ref_mask = batch["ref_mask"]  # (B, T')
-
         diff_out, prior_out = self.model(
             code=code,
             pitch=pitch,
@@ -422,18 +421,18 @@ class NS2Trainer(TTSTrainer):
             mask=mask,
             ref_mask=ref_mask,
         )
-
         # pitch loss
         pitch_loss = log_pitch_loss(prior_out["pitch_pred_log"], pitch, mask=mask)
         total_loss += pitch_loss
         train_losses["pitch_loss"] = pitch_loss
-
         # duration loss
         dur_loss = log_dur_loss(prior_out["dur_pred_log"], duration, mask=phone_mask)
+        if torch.isnan(dur_loss).any():
+            breakpoint()
         total_loss += dur_loss
         train_losses["dur_loss"] = dur_loss
 
-        x0 = self.model.module.code_to_latent(code)
+        x0 = self.model.code_to_latent(code)
         if self.cfg.model.diffusion.diffusion_type == "diffusion":
             # diff loss x0
             diff_loss_x0 = diff_loss(diff_out["x0_pred"], x0, mask=mask)
@@ -455,13 +454,12 @@ class NS2Trainer(TTSTrainer):
             train_losses["diff_loss_flow"] = diff_loss_flow
 
         # diff loss ce
-
         # (nq, B, T); (nq, B, T, 1024)
         if self.cfg.train.diff_ce_loss_lambda > 0:
-            pred_indices, pred_dist = self.model.module.latent_to_code(
+            pred_indices, pred_dist = self.model.latent_to_code(
                 diff_out["x0_pred"], nq=code.shape[1]
             )
-            gt_indices, _ = self.model.module.latent_to_code(x0, nq=code.shape[1])
+            gt_indices, _ = self.model.latent_to_code(x0, nq=code.shape[1])
             diff_loss_ce = diff_ce_loss(pred_dist, gt_indices, mask=mask)
             total_loss += diff_loss_ce * self.cfg.train.diff_ce_loss_lambda
             train_losses["diff_loss_ce"] = diff_loss_ce
@@ -533,7 +531,7 @@ class NS2Trainer(TTSTrainer):
         total_loss += dur_loss
         valid_losses["dur_loss"] = dur_loss
 
-        x0 = self.model.module.code_to_latent(code)
+        x0 = self.model.code_to_latent(code)
         if self.cfg.model.diffusion.diffusion_type == "diffusion":
             # diff loss x0
             diff_loss_x0 = diff_loss(diff_out["x0_pred"], x0, mask=mask)
@@ -558,10 +556,10 @@ class NS2Trainer(TTSTrainer):
 
         # (nq, B, T); (nq, B, T, 1024)
         if self.cfg.train.diff_ce_loss_lambda > 0:
-            pred_indices, pred_dist = self.model.module.latent_to_code(
+            pred_indices, pred_dist = self.model.latent_to_code(
                 diff_out["x0_pred"], nq=code.shape[1]
             )
-            gt_indices, _ = self.model.module.latent_to_code(x0, nq=code.shape[1])
+            gt_indices, _ = self.model.latent_to_code(x0, nq=code.shape[1])
             diff_loss_ce = diff_ce_loss(pred_dist, gt_indices, mask=mask)
             total_loss += diff_loss_ce * self.cfg.train.diff_ce_loss_lambda
             valid_losses["diff_loss_ce"] = diff_loss_ce
@@ -625,9 +623,13 @@ class NS2Trainer(TTSTrainer):
         epoch_sum_loss: float = 0.0
         epoch_losses: dict = {}
         epoch_step: int = 0
-
+        idxxx = 1
+        print("len(dataloader): %d"%(len(self.train_dataloader)))
         for batch in self.train_dataloader:
             # Put the data to cuda device
+            print("-----------------")
+            print("batch %d:"%(idxxx))
+            idxxx = idxxx + 1
             device = self.accelerator.device
             for k, v in batch.items():
                 if isinstance(v, torch.Tensor):
@@ -652,13 +654,14 @@ class NS2Trainer(TTSTrainer):
                             step=self.step,
                         )
 
-                if (
-                    self.accelerator.is_main_process
-                    and self.batch_count
-                    % (1 * self.cfg.train.gradient_accumulation_step)
-                    == 0
-                ):
-                    self.echo_log(train_losses, mode="Training")
+                print(train_losses)
+                # if (
+                #     self.accelerator.is_main_process
+                #     and self.batch_count
+                #     % (1 * self.cfg.train.gradient_accumulation_step)
+                #     == 0
+                # ):
+                #     print(train_losses)
 
                 self.step += 1
                 epoch_step += 1

@@ -45,6 +45,7 @@ def extract_acoustic_features(dataset, output_path, cfg, dataset_types, n_worker
         # acoustic_extractor.extract_utt_acoustic_features_parallel(
         #     metadata, dataset_output, cfg, n_workers=n_workers
         # )
+    print("dataset_output: \n",dataset_output)
     acoustic_extractor.extract_utt_acoustic_features_serial(
         metadata, dataset_output, cfg
     )
