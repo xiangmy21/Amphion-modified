@@ -263,7 +263,7 @@ def extract_utt_acoustic_features_tts(dataset_output, cfg, utt):
                 utt, wav, cfg.preprocess
             )
             save_feature(dataset_output, cfg.preprocess.duration_dir, uid, durations)
-            save_txt(dataset_output, cfg.preprocess.lab_dir, uid, phones)
+            save_txt(dataset_output, cfg.preprocess.phone_dir, uid, phones)
             wav = wav[start:end].astype(np.float32)
             wav_torch = torch.from_numpy(wav).to(wav_torch.device)
 

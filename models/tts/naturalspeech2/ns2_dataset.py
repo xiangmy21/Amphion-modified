@@ -120,7 +120,7 @@ class NS2Dataset(torch.utils.data.Dataset):
                     cfg.preprocess.processed_dir, # data
                     dataset, # libritts
                     cfg.preprocess.phone_dir, # phones
-                    uid + ".phone" # train-clean-100#19#198#19_198_000000_000000.phone
+                    uid + ".txt" # train-clean-100#19#198#19_198_000000_000000.txt
                 )
 
         # assert cfg.preprocess.use_len == True
@@ -231,7 +231,7 @@ class NS2Dataset(torch.utils.data.Dataset):
                 [
                     *map(
                         self.phone2id.get,
-                        phone.split(),
+                        phone,
                     )
                 ]
             )
@@ -307,6 +307,7 @@ class NS2Dataset(torch.utils.data.Dataset):
         else:
             pitch = np.pad(pitch, (0, min_len - pitch_len), mode="edge")
         frame_nums = min_len
+        print("code_len:", code_len, "dur_sum:", dur_sum)
         if dur_sum > min_len:
             assert (duration[-1] - (dur_sum - min_len)) >= 0
             duration[-1] = duration[-1] - (dur_sum - min_len)

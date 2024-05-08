@@ -68,8 +68,11 @@ def get_duration(utt, wav, cfg):
     # text_path = os.path.join(
     #     cfg.processed_dir, dataset, "raw_data", speaker, "{}.lab".format(basename)
     # )
+    # tg_path = os.path.join(
+    #     cfg.processed_dir, dataset, "TextGrid", distribution, speaker, paragraph, "{}.TextGrid".format(uid)
+    # )
     tg_path = os.path.join(
-        cfg.processed_dir, dataset, "TextGrid", distribution, speaker, paragraph, "{}.TextGrid".format(uid)
+        cfg.processed_dir, dataset, "TextGrid", speaker, paragraph, "{}.TextGrid".format(uid)
     )
 
     # # Read raw text
