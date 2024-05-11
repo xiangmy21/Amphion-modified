@@ -89,7 +89,7 @@ class NS2Dataset(torch.utils.data.Dataset):
                 self.utt2pitch_path[utt] = os.path.join(
                     cfg.preprocess.processed_dir,
                     dataset,
-                    cfg.preprocess.pitch_dir,  # pitch
+                    cfg.preprocess.phone_pitch_dir,  # pitch_avg
                     uid + ".npy",
                 )
 

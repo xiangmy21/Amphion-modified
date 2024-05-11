@@ -21,7 +21,7 @@
         "gradient_accumulation_step": 1,
         "tracker": ["tensorboard"],
         "max_epoch": 10,
-        "save_checkpoint_stride": [1],
+        "save_checkpoint_stride": [5],
         "keep_last": [1000],
         "run_eval": [true],
         "dataloader": {

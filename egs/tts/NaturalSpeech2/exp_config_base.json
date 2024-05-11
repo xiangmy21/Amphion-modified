@@ -17,6 +17,7 @@
         "melspec_dir": "mel",
         "code_dir": "code",
         "pitch_dir": "pitch",
+        "phone_pitch_dir": "pitch_avg",
         "duration_dir": "duration",
         "phone_dir": "phone",
         "metadata_dir": "metadata",
