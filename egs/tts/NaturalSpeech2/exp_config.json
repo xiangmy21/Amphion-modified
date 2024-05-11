@@ -29,8 +29,8 @@
         "adam": {
             "lr": 1.0e-4
         },
-        "use_dynamic_batchsize": true,
-        "batch_size": 8,
+        "use_dynamic_batchsize": false,
+        "batch_size": 4,
         "max_tokens": 7500,
         "max_sentences": 32,
         "lr_warmup_steps": 5000,

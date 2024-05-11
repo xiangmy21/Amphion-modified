@@ -317,11 +317,25 @@ class NS2Dataset(torch.utils.data.Dataset):
 
     def get_target_and_reference(self, code, pitch, duration, phone_id, frame_nums):
         phone_nums = len(phone_id)
+        assert phone_nums >= 1
+        if phone_nums == 1:
+            return {
+                "code": code,
+                "ref_code": code,
+                "pitch": pitch,
+                "ref_pitch": pitch,
+                "duration": duration,
+                "ref_duration": duration,
+                "phone_id": phone_id,
+                "ref_phone_id": phone_id,
+                "frame_nums": frame_nums,
+                "ref_frame_nums": frame_nums,
+            }
         clip_phone_nums = np.random.randint(
             int(phone_nums * 0.1), int(phone_nums * 0.5) + 1
         )
         clip_phone_nums = max(clip_phone_nums, 1)
-        assert clip_phone_nums <= phone_nums and clip_phone_nums >= 1
+        assert clip_phone_nums < phone_nums and clip_phone_nums >= 1
         if self.cfg.preprocess.clip_mode == "mid":
             start_idx = np.random.randint(0, phone_nums - clip_phone_nums)
         elif self.cfg.preprocess.clip_mode == "start":

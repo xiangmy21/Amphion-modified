@@ -224,16 +224,21 @@ class TransformerEncoder(nn.Module):
         else:
             x = self.position_emb(x)  # (B, T, d)
 
+        # if torch.isnan(x).any():
+        #     breakpoint()
+
         for layer in self.layers:
             x = layer(x, key_padding_mask, condition)
+            # if torch.isnan(x).any():
+            #     breakpoint()
 
         if self.use_cln:
             x = self.last_ln(x, condition)
         else:
             x = self.last_ln(x)
         
-        if torch.isnan(x).any():
-            breakpoint()
+        # if torch.isnan(x).any():
+        #     breakpoint()
 
         return x
 
@@ -307,8 +312,8 @@ class DurationPredictor(nn.Module):
 
         for idx, (conv, act, ln, dropout) in enumerate(self.conv):
             res = x
-            if torch.isnan(x).any():
-                breakpoint()
+            # if torch.isnan(x).any():
+            #     breakpoint()
             # print(torch.min(x), torch.max(x))
             if idx % self.cross_attn_per_layer == 0:
                 attn_idx = idx // self.cross_attn_per_layer
@@ -331,18 +336,10 @@ class DurationPredictor(nn.Module):
                 y_ = (y_ + attn_res) / math.sqrt(2.0)
 
                 x = y_.transpose(1, 2)
-            if torch.isnan(x).any():
-                breakpoint()
             x = conv(x)
-            if torch.isnan(x).any():
-                breakpoint()
             # print(torch.min(x), torch.max(x))
             x = act(x)
-            if torch.isnan(x).any():
-                breakpoint()
             x = ln(x.transpose(1, 2))
-            if torch.isnan(x).any():
-                breakpoint()
             # print(torch.min(x), torch.max(x))
             x = x.transpose(1, 2)
 

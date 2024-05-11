@@ -357,6 +357,8 @@ def extract_utt_acoustic_features_tts(dataset_output, cfg, utt):
                     assert isinstance(pitch, np.ndarray)
                     uv = pitch != 0
                     save_feature(dataset_output, cfg.preprocess.uv_dir, uid, uv)
+            else:
+                print("bad data!:", uid)
 
         if cfg.preprocess.extract_audio:
             save_torch_audio(
