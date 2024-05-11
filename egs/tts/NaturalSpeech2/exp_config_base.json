@@ -25,6 +25,7 @@
         "phone_extractor": "lexicon",
         "sample_rate": 24000,
         "codec_hop_size": 320,
+        "hop_size": 320,
         "extract_pitch": true,
         "f0_min": 50,
         "f0_max": 1100,

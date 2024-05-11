@@ -255,8 +255,8 @@ def extract_utt_acoustic_features_tts(dataset_output, cfg, utt):
         # Load audio data into tensor with sample rate of the config file
         wav_torch, _ = audio.load_audio_torch(wav_path, cfg.preprocess.sample_rate)
         wav = wav_torch.cpu().numpy()
-        if len(wav) < cfg.preprocess.sample_rate*2 :
-            return
+        # if len(wav) < cfg.preprocess.sample_rate :
+        #     return
         # extract features
         if cfg.preprocess.extract_duration:
             durations, phones, start, end = duration.get_duration(

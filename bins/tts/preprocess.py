@@ -172,8 +172,8 @@ def preprocess(cfg, args):
         if cfg.preprocess.mel_min_max_norm:
             acoustic_extractor.cal_mel_min_max(dataset, output_path, cfg)
 
-        if cfg.preprocess.extract_pitch:
-            acoustic_extractor.cal_pitch_statistics(dataset, output_path, cfg)
+        # if cfg.preprocess.extract_pitch:
+        #     acoustic_extractor.cal_pitch_statistics(dataset, output_path, cfg)
 
         if cfg.preprocess.extract_energy:
             acoustic_extractor.cal_energy_statistics(dataset, output_path, cfg)

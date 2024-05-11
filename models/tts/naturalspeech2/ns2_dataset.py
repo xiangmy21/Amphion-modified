@@ -237,7 +237,7 @@ class NS2Dataset(torch.utils.data.Dataset):
             )
             # print(phone)
             # print(phone_id)
-
+        # print("uid:", uid)
         # align length
         code, pitch, duration, phone_id, frame_nums = self.align_length(
             code, pitch, duration, phone_id, frame_nums
@@ -307,7 +307,7 @@ class NS2Dataset(torch.utils.data.Dataset):
         else:
             pitch = np.pad(pitch, (0, min_len - pitch_len), mode="edge")
         frame_nums = min_len
-        print("code_len:", code_len, "dur_sum:", dur_sum)
+        # print("code_len:", code_len, "dur_sum:", dur_sum)
         if dur_sum > min_len:
             assert (duration[-1] - (dur_sum - min_len)) >= 0
             duration[-1] = duration[-1] - (dur_sum - min_len)

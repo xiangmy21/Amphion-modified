@@ -9,7 +9,7 @@
     "preprocess": {
       // Specify the output root path to save the processed data 
       "processed_dir": "data",
-      "train_file": "train_Final_may.json",
+      "train_file": "train_few.json",
       "valid_file": "test.json",
       "read_metadata": false,
       "metadata_dir": "metadata"
