@@ -3,6 +3,9 @@
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
 
+# Raise error if any command fails
+set -e
+
 # Install ffmpeg in Linux
 conda install -c conda-forge ffmpeg
 
@@ -22,6 +25,8 @@ pip install git+https://github.com/lhotse-speech/lhotse
 pip install -U encodec
 
 pip install phonemizer==3.2.1 pypinyin==0.48.0
+
+pip install black==24.1.1
 
 # Uninstall nvidia-cublas-cu11 if there exist some bugs about CUDA version
 # pip uninstall nvidia-cublas-cu11
