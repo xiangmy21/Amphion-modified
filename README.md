@@ -1,3 +1,46 @@
+# Modified Version To Train NaturalSpeech2
+
+本仓库是对 [Amphion](https://github.com/open-mmlab/Amphion) 仓库的小修改版本，主要修复了原仓库中NaturalSpeech2预处理数据部分的问题，跑通了NaturalSpeech2在Libritts数据集上的训练流程。
+
+修复后的代码在依赖安装完成后，只需数据集的TextGrid就可以进行训练。
+
+接下来会简要说明部署环境，准备数据，进行训练的流程：
+#### 依赖安装
+按照原仓库指示安装 env.sh 中所需环境即可，对于服务器无法连接外网的，这是一些安装环境的问题解决方案：
+- 需要pip git+github的，可以到github页面看看直接装包。
+- NS2的codec模型参数下载，需要到仓库源码里找到下载路径，找到cache_file的路径，放到.cache里。
+- nltk，本地下载后上传。我的下载位置在C:\Users\{Username}\AppData\Roaming\nltk_data
+- monotonic align，仿照VALLE的run.sh操作。
+
+#### 数据处理
+<!-- 思路：仓库中的代码可以根据TextGrid生成NS2训练所需的duration, pitch, phone。code需要仿照inference的过程生成，我写了一份`generate_code.py`，根据Libritts数据集提取对应的code。 -->
+由于本地没有MFS，我的TextGrid是网上下载的，来源 [github.com/kan-bayashi/LibriTTSLabel](https://github.com/kan-bayashi/LibriTTSLabel)
+
+操作流程：
+
+- 执行 `python bins/tts/preprocess.py --config={your path}/amphion/egs/tts/NaturalSpeech2/exp_config.json`，生成 `train.json` （该文件的生成实际上在 `libritts.py` 第64行，流程还可以优化）
+- 由于 `train.json` 基于整个数据集生成，而 TextGrid 中只包含一部分，所以需要对 `train.json` 进行一定的清理，可以先把 `egs/tts/NaturalSpeech2/trainjson_filter.py` 中关于duration等部分注释，只保留TextGrid部分后运行。得到新的 `train-clean.json` 文件。
+- 修改 `egs/tts/NaturalSpeech2/exp_config.json` 中的 `train_file` 和 `textgrid_dir` 为你自己的目录。
+- 执行 `sh egs/tts/NaturalSpeech2/run_preprocess.sh`，生成 duration, pitch, phone等数据。
+- 执行 `python egs/tts/NaturalSpeech2/generate_code.py` 生成 `code`，注意修改数据集对应的路径。
+
+#### 训练
+执行 `sh egs/tts/NaturalSpeech2/run_train.sh` 即可。如果希望从checkpoint继续训练，可加入参数 `--resume --checkpoint_path "[checkpointpath]"`
+
+在 `exp_config.json` 中可以修改：
+-  `max_epoch`（最大训练轮数）
+- `save_checkpoint_stride`（多少步保留一次checkpoint，一次大约4.7G）
+- `batch_size`（批次大小，用于降低显存占用）
+
+训练生成的模型位置在 `ckpt/tts/ns2_libritts`。
+
+#### 推理
+```
+bash egs/tts/NaturalSpeech2/run_inference.sh --text "[The text you want to generate]
+```
+输出在 `output` 文件夹中。在sh文件中可以修改推理使用的checkpoint。
+
+---
 # Amphion: An Open-Source Audio, Music, and Speech Generation Toolkit
 
 <div>
