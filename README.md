@@ -14,7 +14,7 @@
 
 #### 数据处理
 <!-- 思路：仓库中的代码可以根据TextGrid生成NS2训练所需的duration, pitch, phone。code需要仿照inference的过程生成，我写了一份`generate_code.py`，根据Libritts数据集提取对应的code。 -->
-由于本地没有MFS，我的TextGrid是网上下载的，来源 [github.com/kan-bayashi/LibriTTSLabel](https://github.com/kan-bayashi/LibriTTSLabel)
+由于本地没有MFA，我的TextGrid是网上下载的，来源 [github.com/kan-bayashi/LibriTTSLabel](https://github.com/kan-bayashi/LibriTTSLabel)
 
 操作流程：
 
