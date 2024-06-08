@@ -80,6 +80,12 @@ def build_parser():
         default="",
     )
     parser.add_argument(
+        "--text_path",
+        help="Text file path to be synthesized.",
+        type=str,
+        default="",
+    )
+    parser.add_argument(
         "--vocoder_dir",
         type=str,
         default=None,

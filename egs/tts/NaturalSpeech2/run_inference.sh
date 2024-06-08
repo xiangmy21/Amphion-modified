@@ -33,16 +33,24 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    --text_path)
+    text_path="$2"
+    shift # past argument
+    shift # past value
+    ;;
     *)    # unknown option
     shift # past argument
     ;;
 esac
 done
 
+export CUDA_VISIBLE_DEVICES="1"
+
 ######## Train Model ###########
 python "${work_dir}"/bins/tts/inference.py \
     --config=$exp_config \
     --text="$text" \
+    --text_path=$text_path \
     --mode=$mode \
     --checkpoint_path=$checkpoint_path \
     --ref_audio=$ref_audio \

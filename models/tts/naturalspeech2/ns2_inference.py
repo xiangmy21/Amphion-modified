@@ -73,7 +73,12 @@ class NS2Inference:
         ref_code, ref_mask = self.get_ref_code()
 
         lexicon = read_lexicon(self.cfg.preprocess.lexicon_path)
-        phone_seq = preprocess_english(self.args.text, lexicon)
+        if self.args.text != "":
+            phone_seq = preprocess_english(self.args.text, lexicon)
+        else:
+            with open(self.args.text_path, 'r', encoding='utf-8') as file:
+                text = file.read().replace('\r', '').replace('\n', ' ')
+            phone_seq = preprocess_english(text, lexicon)
         print(phone_seq)
 
         phone_id = np.array(

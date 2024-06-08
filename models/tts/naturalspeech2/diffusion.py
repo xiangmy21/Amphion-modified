@@ -106,27 +106,28 @@ class Diffusion(nn.Module):
         h = 1.0 / max(n_timesteps, 1)
         xt = z
         
-        views = get_views(z.shape[1], z.shape[2], window_size=64, stride=8)
+        views = get_views(z.shape[-1], window_size=128, stride=32)
         count = torch.zeros_like(xt)
         value = torch.zeros_like(xt)
         
         
         for i in range(n_timesteps):
-            count._zero()
-            value._zero()
+            count.zero_()
+            value.zero_()
             
             for t_start, t_end in views:
                 latent_view = xt[:, :, t_start:t_end]
+                cond_view = cond[:, t_start:t_end, :]
                 t = (1.0 - (i + 0.5) * h) * torch.ones(
                 latent_view.shape[0], dtype=latent_view.dtype, device=latent_view.device
                 )
-                dxt = self.cal_dxt(latent_view, x_mask, cond, spk_query_emb, diffusion_step=t, h=h) # need to consider carefully
+                dxt = self.cal_dxt(latent_view, x_mask, cond_view, spk_query_emb, diffusion_step=t, h=h) # need to consider carefully
                 latent_view_denoised = latent_view - dxt
 
                 if self.cfg.ode_solver == "midpoint":
                     latent_view_denoised_mid = 0.5 * (latent_view_denoised + latent_view)
                     dxt = self.cal_dxt(
-                        latent_view_denoised_mid, x_mask, cond, spk_query_emb, diffusion_step=t + 0.5 * h, h=h
+                        latent_view_denoised_mid, x_mask, cond_view, spk_query_emb, diffusion_step=t + 0.5 * h, h=h
                     )
                     latent_view = latent_view - dxt
                 elif self.cfg.ode_solver == "euler":
@@ -163,11 +164,12 @@ class Diffusion(nn.Module):
         return xt
     
 
-def get_views(height, width, window_size=64, stride=8): # height=d, width=T
-    num_blocks_width = (width - window_size) // stride + 1
+def get_views(length, window_size=128, stride=32): # length=T
+    num_blocks_width = (length - window_size) // stride + 1
     views = []
     for i in range(num_blocks_width):
-        w_start = int(i * stride)
-        w_end = w_start + window_size
-        views.append((w_start, w_end))
+        t_start = int(i * stride)
+        t_end = t_start + window_size
+        views.append((t_start, t_end))
+    views[-1] = (views[-1][0], length)
     return views

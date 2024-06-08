@@ -182,7 +182,7 @@ class NaturalSpeech2(nn.Module):
         z = torch.randn(
             prior_condition.shape[0], self.latent_dim, prior_condition.shape[1]
         ).to(ref_latent.device) / (1.20)
-        x0 = self.diffusion.reverse_diffusion(
+        x0 = self.diffusion.multi_reverse_diffusion(
             z, None, prior_condition, inference_steps, spk_query_emb
         )
 
