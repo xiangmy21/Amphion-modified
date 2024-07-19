@@ -72,8 +72,12 @@ class PriorEncoder(nn.Module):
         pred_dur: (B, N)
         pred_pitch: (B, T)
         """
-
-        x = self.encoder(phone_id, phone_mask, ref_emb.transpose(1, 2))
+        # TODO: 流式生成需要解决三个部分的问题：
+        # 1. phone_id 过 self.encoder (TransfomerEncoder) 时, 添加 attn_mask
+        # 2. self.duration_predictor (DurationPredictor, 含Conv1d) 生成 duration 时, 改为流式
+        # 3. self.pitch_predictor (PitchPredictor, 含Conv1d) 生成 pitch 时, 改为流式
+        
+        x = self.encoder(phone_id, phone_mask, ref_emb.transpose(1, 2)) # (B, N, d) d default 512
 
         dur_pred_out = self.duration_predictor(x, phone_mask, ref_emb, ref_mask) # duration和pitch受ref_emb影响
         # dur_pred_out: {dur_pred_log, dur_pred, dur_pred_round}
