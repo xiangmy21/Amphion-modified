@@ -63,7 +63,7 @@ class PriorEncoder(nn.Module):
         duration: (B, N)
         pitch: (B, T)
         phone_mask: (B, N); mask is 0
-        mask: (B, T); mask is 0
+        mask: (B, T); mask is 0 对齐batch时用来遮空帧
         ref_emb: (B, d, T')
         ref_mask: (B, T'); mask is 0
 

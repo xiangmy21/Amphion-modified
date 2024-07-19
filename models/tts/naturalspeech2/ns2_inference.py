@@ -73,7 +73,7 @@ class NS2Inference:
         ref_code, ref_mask = self.get_ref_code()
         # print("ref_code: ", ref_code) # discrete
         # print("ref_code.shape: ", ref_code.shape) # (B, K, T), K is the number of codebooks
-        # print("ref_mask: ", ref_mask) # (B, T) all true.
+        # print("ref_mask: ", ref_mask) # (B, T) all true. 标准库的实现中1代表忽略，0代表保留，在本仓库的transformers.py中输入时取反了，所以这里全1.
 
         lexicon = read_lexicon(self.cfg.preprocess.lexicon_path)
         if self.args.text != "":
@@ -103,8 +103,13 @@ class NS2Inference:
         # print(torch.sum(prior_out["dur_pred_round"]))
 
         latent_ref = self.codec.quantizer.vq.decode(ref_code.transpose(0, 1)) # (B, 128, T)
-        rec_wav = self.codec.decoder(x0) # x0: (1, 128, T)
+        rec_wav = self.codec.decoder(x0) # x0: (1, 128, T), rec_wav: (1, 1, L)
         # ref_wav = self.codec.decoder(latent_ref)
+        rec_wav_chunks = torch.zeros(1, 1, 0).to(x0.device)
+        for i in range(0, x0.shape[-1], 120):
+            chunk = x0[:, :, i:min(i+120, x0.shape[-1])]
+            rec_chunk = self.codec.decoder(chunk)
+            rec_wav_chunks = torch.cat([rec_wav_chunks, rec_chunk], dim=-1)
 
         os.makedirs(self.args.output_dir, exist_ok=True)
 
@@ -113,6 +118,14 @@ class NS2Inference:
                 self.args.output_dir, "out_"+self.args.ref_audio.split('/')[-1].split('.')[0]
             ),
             rec_wav[0, 0].detach().cpu().numpy(),
+            samplerate=24000,
+        )
+        # chunks: 120帧一段
+        sf.write(
+            "{}/{}.wav".format(
+                self.args.output_dir, "out_chunks_"+self.args.ref_audio.split('/')[-1].split('.')[0]
+            ),
+            rec_wav_chunks[0, 0].detach().cpu().numpy(),
             samplerate=24000,
         )
 
