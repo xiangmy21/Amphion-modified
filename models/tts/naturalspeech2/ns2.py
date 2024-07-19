@@ -112,7 +112,7 @@ class NaturalSpeech2(nn.Module):
         if self.latent_dim is not None:
             ref_latent = self.prompt_lin(ref_latent.transpose(1, 2))
 
-        ref_latent = self.prompt_encoder(ref_latent, ref_mask, condition=None)
+        ref_latent = self.prompt_encoder(ref_latent, ref_mask, condition=None) # 将ref_latent输入到transformer中得到speaker embedding （对prompt进行处理）
         spk_emb = ref_latent.transpose(1, 2)  # (B, d, T')
 
         spk_query_emb = self.query_emb(
@@ -125,9 +125,9 @@ class NaturalSpeech2(nn.Module):
             spk_emb.transpose(1, 2),
             spk_emb.transpose(1, 2),
             key_padding_mask=~(ref_mask.bool()),
-        )  # (B, query_emb_num, d)
+        )  # (B, query_emb_num, d) 通过一个类似于self-attention的机制得到speaker query embedding
 
-        prior_out = self.prior_encoder(
+        prior_out = self.prior_encoder( # 通过prior_encoder得到包含pitch和duration信息的prior_condition
             phone_id=phone_id,
             duration=duration,
             pitch=pitch,
@@ -177,8 +177,8 @@ class NaturalSpeech2(nn.Module):
             ref_mask=ref_mask,
             is_inference=True,
         )
-        prior_condition = prior_out["prior_out"]  # (B, T, d)
-
+        prior_condition = prior_out["prior_out"]  # (B, T, d) d是条件的特征维度,512
+        # print("latent_dim:", self.latent_dim) # default: 128
         z = torch.randn(
             prior_condition.shape[0], self.latent_dim, prior_condition.shape[1]
         ).to(ref_latent.device) / (1.20)

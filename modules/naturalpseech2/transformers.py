@@ -25,11 +25,11 @@ class StyleAdaptiveLayerNorm(nn.Module):
 
         style = self.style(torch.mean(condition, dim=1, keepdim=True))
 
-        gamma, beta = style.chunk(2, -1)
+        gamma, beta = style.chunk(2, -1) # 将condition通过线性层得到gamma和beta
 
         out = self.norm(x)
 
-        out = gamma * out + beta
+        out = gamma * out + beta # 将x的数据分布变换到由condition控制的数据分布
         return out
 
 
@@ -217,28 +217,20 @@ class TransformerEncoder(nn.Module):
         else:
             self.last_ln = nn.LayerNorm(self.encoder_hidden)
 
-    def forward(self, x, key_padding_mask, condition=None):
+    def forward(self, x, key_padding_mask, condition=None): # condition即指定的参考音色ref_emb
         if len(x.shape) == 2 and self.use_enc_emb:
             x = self.enc_emb_tokens(x)
             x = self.position_emb(x)
         else:
             x = self.position_emb(x)  # (B, T, d)
 
-        # if torch.isnan(x).any():
-        #     breakpoint()
-
         for layer in self.layers:
             x = layer(x, key_padding_mask, condition)
-            # if torch.isnan(x).any():
-            #     breakpoint()
 
-        if self.use_cln:
+        if self.use_cln: # use_cln即是否使用加入条件的LayerNorm
             x = self.last_ln(x, condition)
         else:
             x = self.last_ln(x)
-        
-        # if torch.isnan(x).any():
-        #     breakpoint()
 
         return x
 
@@ -312,9 +304,6 @@ class DurationPredictor(nn.Module):
 
         for idx, (conv, act, ln, dropout) in enumerate(self.conv):
             res = x
-            # if torch.isnan(x).any():
-            #     breakpoint()
-            # print(torch.min(x), torch.max(x))
             if idx % self.cross_attn_per_layer == 0:
                 attn_idx = idx // self.cross_attn_per_layer
                 attn, attn_ln, attn_drop = self.cattn[attn_idx]
@@ -322,9 +311,8 @@ class DurationPredictor(nn.Module):
                 attn_res = y_ = x.transpose(1, 2)  # (B, d, N) -> (B, N, d)
 
                 y_ = attn_ln(y_)
-                # print(torch.min(y_), torch.min(y_))
-                # print(torch.min(ref_emb), torch.max(ref_emb))
-                y_, _ = attn(
+
+                y_, _ = attn( # 做一次Cross-Attention
                     y_,
                     ref_emb.transpose(1, 2),
                     ref_emb.transpose(1, 2),
@@ -333,7 +321,7 @@ class DurationPredictor(nn.Module):
                 # y_, _ = attn(y_, ref_emb.transpose(1, 2), ref_emb.transpose(1, 2))
                 # print(torch.min(y_), torch.min(y_))
                 y_ = attn_drop(y_)
-                y_ = (y_ + attn_res) / math.sqrt(2.0)
+                y_ = (y_ + attn_res) / math.sqrt(2.0) # 将Cross-Attention的结果加到x上
 
                 x = y_.transpose(1, 2)
             x = conv(x)
@@ -351,7 +339,7 @@ class DurationPredictor(nn.Module):
             if mask is not None:
                 x = x * mask.to(x.dtype)[:, None, :]
 
-        x = self.linear(x.transpose(1, 2))
+        x = self.linear(x.transpose(1, 2)) # 最后通过线性层压缩到一个数，exp()-1四舍五入得到帧数
         x = torch.squeeze(x, -1)
 
         dur_pred = x.exp() - 1

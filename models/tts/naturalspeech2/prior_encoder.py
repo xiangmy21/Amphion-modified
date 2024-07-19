@@ -72,16 +72,13 @@ class PriorEncoder(nn.Module):
         pred_dur: (B, N)
         pred_pitch: (B, T)
         """
-        # if torch.isnan(ref_emb).any():
-        #     breakpoint()
+
         x = self.encoder(phone_id, phone_mask, ref_emb.transpose(1, 2))
-        # if torch.isnan(x).any():
-        #     breakpoint()
-        # print(torch.min(x), torch.max(x))
-        dur_pred_out = self.duration_predictor(x, phone_mask, ref_emb, ref_mask)
+
+        dur_pred_out = self.duration_predictor(x, phone_mask, ref_emb, ref_mask) # duration和pitch受ref_emb影响
         # dur_pred_out: {dur_pred_log, dur_pred, dur_pred_round}
 
-        if is_inference or duration is None:
+        if is_inference or duration is None: # 这里通过预测的duration拓展了x的长度
             x, mel_len = self.length_regulator(
                 x,
                 dur_pred_out["dur_pred_round"],

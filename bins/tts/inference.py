@@ -7,9 +7,9 @@ import argparse
 from argparse import ArgumentParser
 import os
 
-from models.tts.fastspeech2.fs2_inference import FastSpeech2Inference
-from models.tts.vits.vits_inference import VitsInference
-from models.tts.valle.valle_inference import VALLEInference
+# from models.tts.fastspeech2.fs2_inference import FastSpeech2Inference
+# from models.tts.vits.vits_inference import VitsInference
+# from models.tts.valle.valle_inference import VALLEInference
 from models.tts.naturalspeech2.ns2_inference import NS2Inference
 from utils.util import load_config
 import torch
@@ -17,9 +17,9 @@ import torch
 
 def build_inference(args, cfg):
     supported_inference = {
-        "FastSpeech2": FastSpeech2Inference,
-        "VITS": VitsInference,
-        "VALLE": VALLEInference,
+        # "FastSpeech2": FastSpeech2Inference,
+        # "VITS": VitsInference,
+        # "VALLE": VALLEInference,
         "NaturalSpeech2": NS2Inference,
     }
 
@@ -151,7 +151,7 @@ def build_parser():
 def main():
     # Parse arguments
     parser = build_parser()
-    VALLEInference.add_arguments(parser)
+    # VALLEInference.add_arguments(parser)
     NS2Inference.add_arguments(parser)
     args = parser.parse_args()
     print(args)

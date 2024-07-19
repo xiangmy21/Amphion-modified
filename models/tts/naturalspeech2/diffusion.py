@@ -165,7 +165,7 @@ class Diffusion(nn.Module):
     
 
 def get_views(length, window_size=128, stride=32): # length=T
-    num_blocks_width = (length - window_size) // stride + 1
+    num_blocks_width = max((length - window_size) // stride + 1, 1) 
     views = []
     for i in range(num_blocks_width):
         t_start = int(i * stride)

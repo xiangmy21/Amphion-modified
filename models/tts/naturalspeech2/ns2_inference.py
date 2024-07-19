@@ -47,7 +47,7 @@ class NS2Inference:
     def build_codec(self):
         encodec_model = EncodecModel.encodec_model_24khz()
         encodec_model = encodec_model.to(device=self.args.device)
-        encodec_model.set_target_bandwidth(12.0)
+        encodec_model.set_target_bandwidth(12.0) # 带宽决定量化器层数 n_q = 16
         return encodec_model
 
     def get_ref_code(self):
@@ -71,6 +71,9 @@ class NS2Inference:
 
     def inference(self):
         ref_code, ref_mask = self.get_ref_code()
+        # print("ref_code: ", ref_code) # discrete
+        # print("ref_code.shape: ", ref_code.shape) # (B, K, T), K is the number of codebooks
+        # print("ref_mask: ", ref_mask) # (B, T) all true.
 
         lexicon = read_lexicon(self.cfg.preprocess.lexicon_path)
         if self.args.text != "":
@@ -95,13 +98,12 @@ class NS2Inference:
         x0, prior_out = self.model.inference(
             ref_code, phone_id, ref_mask, self.args.inference_step
         )
-        print(prior_out["dur_pred"])
-        print(prior_out["dur_pred_round"])
-        print(torch.sum(prior_out["dur_pred_round"]))
+        # print(prior_out["dur_pred"])
+        # print(prior_out["dur_pred_round"]) # (1, N) 每个音素的持续帧数
+        # print(torch.sum(prior_out["dur_pred_round"]))
 
-        latent_ref = self.codec.quantizer.vq.decode(ref_code.transpose(0, 1))
-
-        rec_wav = self.codec.decoder(x0)
+        latent_ref = self.codec.quantizer.vq.decode(ref_code.transpose(0, 1)) # (B, 128, T)
+        rec_wav = self.codec.decoder(x0) # x0: (1, 128, T)
         # ref_wav = self.codec.decoder(latent_ref)
 
         os.makedirs(self.args.output_dir, exist_ok=True)
