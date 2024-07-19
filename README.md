@@ -7,10 +7,17 @@
 接下来会简要说明部署环境，准备数据，进行训练的流程：
 #### 依赖安装
 按照原仓库指示安装 env.sh 中所需环境即可，对于服务器无法连接外网的，这是一些安装环境的问题解决方案：
-- 需要pip git+github的，可以到github页面看看直接装包。
-- NS2的codec模型参数下载，需要到仓库源码里找到下载路径，找到cache_file的路径，放到.cache里。
-- nltk，本地下载后上传。我的下载位置在C:\Users\{Username}\AppData\Roaming\nltk_data
-- monotonic align，仿照VALLE的run.sh操作。
+1. `sh env.sh` 安装。注意先把github的两个修改为直接装包。
+   
+2. 下载checkpoint：https://huggingface.co/amphion/naturalspeech2_libritts，放到对应位置（访问位置在run_inference中）。
+   
+3. 下载nltk数据包：可以[NLTK Data](https://www.nltk.org/nltk_data/)下载也可以`import nltk`后`nltk.download('xxx')`下载，需要解压。nltk_data会自己搜索相应位置，可以放到家目录的`~/nltk_data`也可以放到anaconda环境`anaconda3/envs/amphion/nltk_data`
+   
+   需要下载两个东西：`cmudict`, `averaged_perceptron_tagger`.
+
+4. 下载Encodec预训练参数：这个藏得比较深，在EncodecModel里面，通过 `torch.hub.load_state_dict_from_url` 进行下载的。需要手动下载，然后放到cache目录。下载地址：https://dl.fbaipublicfiles.com/encodec/v0/encodec_24khz-d7cc33bc.th，放置位置：`~/.cache/torch/hub/checkpoints/encodec_24khz-d7cc33bc.th` 
+
+5. monotonic align，仿照VALLE的run.sh操作。
 
 #### 数据处理
 <!-- 思路：仓库中的代码可以根据TextGrid生成NS2训练所需的duration, pitch, phone。code需要仿照inference的过程生成，我写了一份`generate_code.py`，根据Libritts数据集提取对应的code。 -->
