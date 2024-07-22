@@ -59,10 +59,10 @@ class NS2Inference:
         ref_wav = ref_wav.unsqueeze(0).to(device=self.args.device)
 
         with torch.no_grad():
-            encoded_frames = self.codec.encode(ref_wav)
-            print("encoded_frames[0]: ", encoded_frames[0][0].shape)
+            encoded_frames = self.codec.encode(ref_wav) # encoded_frames[0][0].shape: (B, 16, 75*seconds)
+            # print("encoded_frames[0]: ", encoded_frames[0][0].shape)
             ref_code = torch.cat([encoded[0] for encoded in encoded_frames], dim=-1)
-        print("ref_code: ", ref_code.shape)
+        # print("ref_code: ", ref_code.shape) same with encoded_frames[0][0].shape
 
         ref_mask = torch.ones(ref_code.shape[0], ref_code.shape[-1]).to(ref_code.device)
         # print(ref_mask.shape)
@@ -93,17 +93,20 @@ class NS2Inference:
             ]
         )
         phone_id = torch.from_numpy(phone_id).unsqueeze(0).to(device=self.args.device)
-        print(phone_id)
+        print("Phone nums: ", phone_id.shape[-1])
 
         x0, prior_out = self.model.inference(
             ref_code, phone_id, ref_mask, self.args.inference_step, flow=True
         )
-        # print(prior_out["dur_pred"])
+        print("Frames: ", x0.shape[-1])
+        # print(prior_out["dur_pred"]) 
         # print(prior_out["dur_pred_round"]) # (1, N) 每个音素的持续帧数
-        # print(torch.sum(prior_out["dur_pred_round"]))
-
-        latent_ref = self.codec.quantizer.vq.decode(ref_code.transpose(0, 1)) # (B, 128, T)
-        rec_wav = self.codec.decoder(x0) # x0: (1, 128, T), rec_wav: (1, 1, L)
+        # print(torch.sum(prior_out["dur_pred_round"])) # 总帧数
+        from time_test import Timer
+        with Timer() as t:
+            t.name = "Decoder"
+            latent_ref = self.codec.quantizer.vq.decode(ref_code.transpose(0, 1)) # (B, 128, T)
+            rec_wav = self.codec.decoder(x0) # x0: (1, 128, T), rec_wav: (1, 1, L)
         # ref_wav = self.codec.decoder(latent_ref)
         # rec_wav_chunks = torch.zeros(1, 1, 0).to(x0.device)
         # for i in range(0, x0.shape[-1], 120):

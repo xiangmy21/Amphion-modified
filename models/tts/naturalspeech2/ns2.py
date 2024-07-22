@@ -166,26 +166,30 @@ class NaturalSpeech2(nn.Module):
             spk_emb.transpose(1, 2),
             key_padding_mask=~(ref_mask.bool()),
         )  # (B, query_emb_num, d)
-
-        prior_out = self.prior_encoder(
-            phone_id=phone_id,
-            duration=None,
-            pitch=None,
-            phone_mask=None,
-            mask=None,
-            ref_emb=spk_emb,
-            ref_mask=ref_mask,
-            is_inference=True,
-            flow=flow,
-        )
-        prior_condition = prior_out["prior_out"]  # (B, T, d) d是条件的特征维度,512
-        # print("latent_dim:", self.latent_dim) # default: 128
-        z = torch.randn(
-            prior_condition.shape[0], self.latent_dim, prior_condition.shape[1]
-        ).to(ref_latent.device) / (1.20)
-        x0 = self.diffusion.multi_reverse_diffusion(
-            z, None, prior_condition, inference_steps, spk_query_emb
-        )
+        from time_test import Timer
+        with Timer() as t:
+            t.name = "Prior Encoder"
+            prior_out = self.prior_encoder(
+                phone_id=phone_id,
+                duration=None,
+                pitch=None,
+                phone_mask=None,
+                mask=None,
+                ref_emb=spk_emb,
+                ref_mask=ref_mask,
+                is_inference=True,
+                flow=flow,
+            )
+            prior_condition = prior_out["prior_out"]  # (B, T, d) d是条件的特征维度,512
+            # print("latent_dim:", self.latent_dim) # default: 128
+        with Timer() as t:
+            t.name = "Diffusion"
+            z = torch.randn(
+                prior_condition.shape[0], self.latent_dim, prior_condition.shape[1]
+            ).to(ref_latent.device) / (1.20)
+            x0 = self.diffusion.multi_reverse_diffusion(
+                z, None, prior_condition, inference_steps, spk_query_emb
+            )
 
         return x0, prior_out
 
