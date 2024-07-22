@@ -70,30 +70,33 @@ class NS2Inference:
         return ref_code, ref_mask
 
     def inference(self):
-        ref_code, ref_mask = self.get_ref_code()
-        # print("ref_code: ", ref_code) # discrete
-        # print("ref_code.shape: ", ref_code.shape) # (B, K, T), K is the number of codebooks
-        # print("ref_mask: ", ref_mask) # (B, T) all true. 标准库的实现中1代表忽略，0代表保留，在本仓库的transformers.py中输入时取反了，所以这里全1.
+        from time_test import Timer
+        with Timer() as t:
+            t.name = "Prepare code & phone"
+            ref_code, ref_mask = self.get_ref_code()
+            # print("ref_code: ", ref_code) # discrete
+            # print("ref_code.shape: ", ref_code.shape) # (B, K, T), K is the number of codebooks
+            # print("ref_mask: ", ref_mask) # (B, T) all true. 标准库的实现中1代表忽略，0代表保留，在本仓库的transformers.py中输入时取反了，所以这里全1.
 
-        lexicon = read_lexicon(self.cfg.preprocess.lexicon_path)
-        if self.args.text != "":
-            phone_seq = preprocess_english(self.args.text, lexicon)
-        else:
-            with open(self.args.text_path, 'r', encoding='utf-8') as file:
-                text = file.read().replace('\r', '').replace('\n', ' ')
-            phone_seq = preprocess_english(text, lexicon)
-        print(phone_seq)
+            lexicon = read_lexicon(self.cfg.preprocess.lexicon_path)
+            if self.args.text != "":
+                phone_seq = preprocess_english(self.args.text, lexicon)
+            else:
+                with open(self.args.text_path, 'r', encoding='utf-8') as file:
+                    text = file.read().replace('\r', '').replace('\n', ' ')
+                phone_seq = preprocess_english(text, lexicon)
+            print(phone_seq)
 
-        phone_id = np.array(
-            [
-                *map(
-                    self.phone2id.get,
-                    phone_seq.replace("{", "").replace("}", "").split(),
-                )
-            ]
-        )
-        phone_id = torch.from_numpy(phone_id).unsqueeze(0).to(device=self.args.device)
-        print("Phone nums: ", phone_id.shape[-1])
+            phone_id = np.array(
+                [
+                    *map(
+                        self.phone2id.get,
+                        phone_seq.replace("{", "").replace("}", "").split(),
+                    )
+                ]
+            )
+            phone_id = torch.from_numpy(phone_id).unsqueeze(0).to(device=self.args.device)
+            print("Phone nums: ", phone_id.shape[-1])
 
         x0, prior_out = self.model.inference(
             ref_code, phone_id, ref_mask, self.args.inference_step, flow=True
@@ -102,7 +105,7 @@ class NS2Inference:
         # print(prior_out["dur_pred"]) 
         # print(prior_out["dur_pred_round"]) # (1, N) 每个音素的持续帧数
         # print(torch.sum(prior_out["dur_pred_round"])) # 总帧数
-        from time_test import Timer
+        
         with Timer() as t:
             t.name = "Decoder"
             latent_ref = self.codec.quantizer.vq.decode(ref_code.transpose(0, 1)) # (B, 128, T)
