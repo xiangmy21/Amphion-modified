@@ -120,7 +120,7 @@ class TransformerEncoderLayer(nn.Module):
             self.encoder_dropout,
         )
 
-    def forward(self, x, key_padding_mask, conditon=None):
+    def forward(self, x, key_padding_mask, attn_mask=None, conditon=None):
         # x: (B, T, d); key_padding_mask: (B, T), mask is 0; condition: (B, T, d)
 
         # self attention
@@ -134,8 +134,12 @@ class TransformerEncoderLayer(nn.Module):
             key_padding_mask_input = ~(key_padding_mask.bool())
         else:
             key_padding_mask_input = None
+        if attn_mask != None:
+            attn_mask_input = ~(attn_mask.bool())
+        else:
+            attn_mask_input = None
         x, _ = self.self_attn(
-            query=x, key=x, value=x, key_padding_mask=key_padding_mask_input
+            query=x, key=x, value=x, key_padding_mask=key_padding_mask_input, attn_mask=attn_mask_input
         )
         x = F.dropout(x, self.encoder_dropout, training=self.training)
         x = residual + x
@@ -217,7 +221,7 @@ class TransformerEncoder(nn.Module):
         else:
             self.last_ln = nn.LayerNorm(self.encoder_hidden)
 
-    def forward(self, x, key_padding_mask, condition=None): # condition即指定的参考音色ref_emb
+    def forward(self, x, key_padding_mask, attn_mask=None, condition=None): # condition即指定的参考音色ref_emb
         if len(x.shape) == 2 and self.use_enc_emb:
             x = self.enc_emb_tokens(x)
             x = self.position_emb(x)
@@ -225,7 +229,7 @@ class TransformerEncoder(nn.Module):
             x = self.position_emb(x)  # (B, T, d)
 
         for layer in self.layers:
-            x = layer(x, key_padding_mask, condition)
+            x = layer(x, key_padding_mask, attn_mask, condition)
 
         if self.use_cln: # use_cln即是否使用加入条件的LayerNorm
             x = self.last_ln(x, condition)

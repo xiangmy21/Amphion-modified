@@ -145,7 +145,7 @@ class NaturalSpeech2(nn.Module):
 
     @torch.no_grad()
     def inference(
-        self, ref_code=None, phone_id=None, ref_mask=None, inference_steps=1000
+        self, ref_code=None, phone_id=None, ref_mask=None, inference_steps=1000, flow=False
     ):
         ref_latent = self.code_to_latent(ref_code)
 
@@ -176,6 +176,7 @@ class NaturalSpeech2(nn.Module):
             ref_emb=spk_emb,
             ref_mask=ref_mask,
             is_inference=True,
+            flow=flow,
         )
         prior_condition = prior_out["prior_out"]  # (B, T, d) d是条件的特征维度,512
         # print("latent_dim:", self.latent_dim) # default: 128

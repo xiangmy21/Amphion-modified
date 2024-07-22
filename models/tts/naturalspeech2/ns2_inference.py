@@ -96,7 +96,7 @@ class NS2Inference:
         print(phone_id)
 
         x0, prior_out = self.model.inference(
-            ref_code, phone_id, ref_mask, self.args.inference_step
+            ref_code, phone_id, ref_mask, self.args.inference_step, flow=True
         )
         # print(prior_out["dur_pred"])
         # print(prior_out["dur_pred_round"]) # (1, N) 每个音素的持续帧数
@@ -105,11 +105,11 @@ class NS2Inference:
         latent_ref = self.codec.quantizer.vq.decode(ref_code.transpose(0, 1)) # (B, 128, T)
         rec_wav = self.codec.decoder(x0) # x0: (1, 128, T), rec_wav: (1, 1, L)
         # ref_wav = self.codec.decoder(latent_ref)
-        rec_wav_chunks = torch.zeros(1, 1, 0).to(x0.device)
-        for i in range(0, x0.shape[-1], 120):
-            chunk = x0[:, :, i:min(i+120, x0.shape[-1])]
-            rec_chunk = self.codec.decoder(chunk)
-            rec_wav_chunks = torch.cat([rec_wav_chunks, rec_chunk], dim=-1)
+        # rec_wav_chunks = torch.zeros(1, 1, 0).to(x0.device)
+        # for i in range(0, x0.shape[-1], 120):
+        #     chunk = x0[:, :, i:min(i+120, x0.shape[-1])]
+        #     rec_chunk = self.codec.decoder(chunk)
+        #     rec_wav_chunks = torch.cat([rec_wav_chunks, rec_chunk], dim=-1)
 
         os.makedirs(self.args.output_dir, exist_ok=True)
 
@@ -121,13 +121,13 @@ class NS2Inference:
             samplerate=24000,
         )
         # chunks: 120帧一段
-        sf.write(
-            "{}/{}.wav".format(
-                self.args.output_dir, "out_chunks_"+self.args.ref_audio.split('/')[-1].split('.')[0]
-            ),
-            rec_wav_chunks[0, 0].detach().cpu().numpy(),
-            samplerate=24000,
-        )
+        # sf.write(
+        #     "{}/{}.wav".format(
+        #         self.args.output_dir, "out_chunks_"+self.args.ref_audio.split('/')[-1].split('.')[0]
+        #     ),
+        #     rec_wav_chunks[0, 0].detach().cpu().numpy(),
+        #     samplerate=24000,
+        # )
 
     def add_arguments(parser: argparse.ArgumentParser):
         parser.add_argument(

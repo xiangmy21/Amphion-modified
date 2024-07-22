@@ -56,6 +56,7 @@ class PriorEncoder(nn.Module):
         ref_emb=None,
         ref_mask=None,
         is_inference=False,
+        flow=False,
     ):
         """
         input:
@@ -77,9 +78,36 @@ class PriorEncoder(nn.Module):
         # 2. self.duration_predictor (DurationPredictor, 含Conv1d) 生成 duration 时, 改为流式
         # 3. self.pitch_predictor (PitchPredictor, 含Conv1d) 生成 pitch 时, 改为流式
         
-        x = self.encoder(phone_id, phone_mask, ref_emb.transpose(1, 2)) # (B, N, d) d default 512
+        # 构造一个phone_id的attention mask, 可以往后看lookahead个音素
+        if flow:
+            lookahead = 2
+            phone_attn_mask = torch.zeros(phone_id.shape[1], phone_id.shape[1], device=phone_id.device)
+            for i in range(phone_id.shape[1]):
+                phone_attn_mask[i, max(0, i-lookahead):min(i+lookahead+1, phone_id.shape[1])] = 1
+        else:
+            phone_attn_mask = None
 
-        dur_pred_out = self.duration_predictor(x, phone_mask, ref_emb, ref_mask) # duration和pitch受ref_emb影响
+        x = self.encoder(phone_id, phone_mask, phone_attn_mask, ref_emb.transpose(1, 2)) # (B, N, d) d default 512
+
+        # 将x切分成长度为blk_size的块,每个块的两边加上padding
+        if flow:
+            blk_size = 5
+            padding = 2
+            dur_pred_out = {
+                "dur_pred_log": torch.zeros(x.shape[0], x.shape[1], device=x.device),
+                "dur_pred": torch.zeros(x.shape[0], x.shape[1], device=x.device),
+                "dur_pred_round": torch.zeros(x.shape[0], x.shape[1], dtype=torch.long),
+            }
+            for i in range(0, x.shape[1], blk_size):
+                view = slice(max(0, i-padding), min(i+blk_size+padding, x.shape[1]))
+                save_view = slice(i, min(i+blk_size, x.shape[1]))
+                get_view = slice(min(i, padding), min(i, padding) + save_view.stop - save_view.start)
+                dur_pred_out_blk = self.duration_predictor(x[:, view], phone_mask, ref_emb, ref_mask)
+                dur_pred_out["dur_pred_log"][:, save_view] = dur_pred_out_blk["dur_pred_log"][:, get_view]
+                dur_pred_out["dur_pred"][:, save_view] = dur_pred_out_blk["dur_pred"][:, get_view]
+                dur_pred_out["dur_pred_round"][:, save_view] = dur_pred_out_blk["dur_pred_round"][:, get_view]
+        else:
+            dur_pred_out = self.duration_predictor(x, phone_mask, ref_emb, ref_mask) # duration和pitch受ref_emb影响
         # dur_pred_out: {dur_pred_log, dur_pred, dur_pred_round}
 
         if is_inference or duration is None: # 这里通过预测的duration拓展了x的长度
@@ -89,9 +117,19 @@ class PriorEncoder(nn.Module):
                 max_len=torch.max(torch.sum(dur_pred_out["dur_pred_round"], dim=1)),
             )
         else:
-            x, mel_len = self.length_regulator(x, duration, max_len=pitch.shape[1])
+            x, mel_len = self.length_regulator(x, duration, max_len=pitch.shape[1]) # (B, T, d)
 
-        pitch_pred_log = self.pitch_predictor(x, mask, ref_emb, ref_mask)
+        if flow:
+            frame_size = 75
+            padding = 25
+            pitch_pred_log = torch.zeros(x.shape[0], x.shape[1], device=x.device)
+            for i in range(0, x.shape[1], frame_size):
+                view = slice(max(0, i-padding), min(i+frame_size+padding, x.shape[1]))
+                save_view = slice(i, min(i+frame_size, x.shape[1]))
+                get_view = slice(min(i, padding), min(i, padding) + save_view.stop - save_view.start)
+                pitch_pred_log[:, save_view] = self.pitch_predictor(x[:, view], mask, ref_emb, ref_mask)[:, get_view]
+        else:
+            pitch_pred_log = self.pitch_predictor(x, mask, ref_emb, ref_mask)
 
         if is_inference or pitch is None:
             pitch_tokens = torch.bucketize(pitch_pred_log.exp(), self.pitch_bins)
