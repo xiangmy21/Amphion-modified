@@ -37,6 +37,11 @@
     "model": {
         "latent_dim": 128,
         "prior_encoder": {
+            "look_ahead": 0,
+            "dur_blk_size": 6,
+            "dur_blk_padding": 2,
+            "pit_blk_size": 75,
+            "pit_blk_padding": 25,
             "vocab_size": 100,
             "pitch_min": 50,
             "pitch_max": 1100,
@@ -70,6 +75,8 @@
             }
         },
         "diffusion": {
+            "window_size": 128,
+            "stride": 64,
             "wavenet": {
                 "input_size": 128,
                 "hidden_size": 512,

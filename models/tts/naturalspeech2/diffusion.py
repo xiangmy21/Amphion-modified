@@ -106,7 +106,7 @@ class Diffusion(nn.Module):
         h = 1.0 / max(n_timesteps, 1)
         xt = z
         
-        views = get_views(z.shape[-1], window_size=128, stride=32)
+        views = get_views(z.shape[-1], window_size=self.cfg.window_size, stride=self.cfg.stride) # window_size=128, stride=64
         count = torch.zeros_like(xt)
         value = torch.zeros_like(xt)
         

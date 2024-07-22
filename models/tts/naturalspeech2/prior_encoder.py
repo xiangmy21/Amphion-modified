@@ -80,10 +80,10 @@ class PriorEncoder(nn.Module):
         
         # 构造一个phone_id的attention mask, 可以往后看lookahead个音素
         if flow:
-            lookahead = 2
-            phone_attn_mask = torch.zeros(phone_id.shape[1], phone_id.shape[1], device=phone_id.device)
+            look_ahead = self.cfg.look_ahead
+            phone_attn_mask = torch.zeros(phone_id.shape[1], phone_id.shape[1], device=phone_id.device, dtype=torch.bool)
             for i in range(phone_id.shape[1]):
-                phone_attn_mask[i, max(0, i-lookahead):min(i+lookahead+1, phone_id.shape[1])] = 1
+                phone_attn_mask[i, max(0, i-look_ahead):min(i+look_ahead+1, phone_id.shape[1])] = True
         else:
             phone_attn_mask = None
 
@@ -91,8 +91,8 @@ class PriorEncoder(nn.Module):
 
         # 将x切分成长度为blk_size的块,每个块的两边加上padding
         if flow:
-            blk_size = 5
-            padding = 2
+            blk_size = self.cfg.dur_blk_size
+            padding = self.cfg.dur_blk_padding
             dur_pred_out = {
                 "dur_pred_log": torch.zeros(x.shape[0], x.shape[1], device=x.device),
                 "dur_pred": torch.zeros(x.shape[0], x.shape[1], device=x.device),
@@ -120,8 +120,8 @@ class PriorEncoder(nn.Module):
             x, mel_len = self.length_regulator(x, duration, max_len=pitch.shape[1]) # (B, T, d)
 
         if flow:
-            frame_size = 75
-            padding = 25
+            frame_size = self.cfg.pit_blk_size
+            padding = self.cfg.pit_blk_padding
             pitch_pred_log = torch.zeros(x.shape[0], x.shape[1], device=x.device)
             for i in range(0, x.shape[1], frame_size):
                 view = slice(max(0, i-padding), min(i+frame_size+padding, x.shape[1]))

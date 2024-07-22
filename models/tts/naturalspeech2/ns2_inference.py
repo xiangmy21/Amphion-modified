@@ -101,7 +101,6 @@ class NS2Inference:
         x0, prior_out = self.model.inference(
             ref_code, phone_id, ref_mask, self.args.inference_step, flow=True
         )
-        print("Frames: ", x0.shape[-1])
         # print(prior_out["dur_pred"]) 
         # print(prior_out["dur_pred_round"]) # (1, N) 每个音素的持续帧数
         # print(torch.sum(prior_out["dur_pred_round"])) # 总帧数
@@ -117,6 +116,14 @@ class NS2Inference:
         #     rec_chunk = self.codec.decoder(chunk)
         #     rec_wav_chunks = torch.cat([rec_wav_chunks, rec_chunk], dim=-1)
 
+        print("look_ahead: ", self.cfg.model.prior_encoder.look_ahead)
+        print("dur_blk_size: ", self.cfg.model.prior_encoder.dur_blk_size)
+        print("dur_blk_padding: ", self.cfg.model.prior_encoder.dur_blk_padding)
+        print("pit_blk_size: ", self.cfg.model.prior_encoder.pit_blk_size)
+        print("pit_blk_padding: ", self.cfg.model.prior_encoder.pit_blk_padding)
+        print("multidiffuion window_size: ", self.cfg.model.diffusion.window_size)
+        print("multidiffuion stride: ", self.cfg.model.diffusion.stride)
+        print("Write to file {}".format("out_"+self.args.ref_audio.split('/')[-1].split('.')[0]))
         os.makedirs(self.args.output_dir, exist_ok=True)
 
         sf.write(

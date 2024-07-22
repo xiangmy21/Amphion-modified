@@ -138,6 +138,7 @@ class TransformerEncoderLayer(nn.Module):
             attn_mask_input = ~(attn_mask.bool())
         else:
             attn_mask_input = None
+
         x, _ = self.self_attn(
             query=x, key=x, value=x, key_padding_mask=key_padding_mask_input, attn_mask=attn_mask_input
         )
@@ -228,10 +229,14 @@ class TransformerEncoder(nn.Module):
         else:
             x = self.position_emb(x)  # (B, T, d)
 
-        x = self.layers[0](x, key_padding_mask, attn_mask, condition) # 只在第一层加入attention mask
-
-        for layer in self.layers[1:]:
-            x = layer(x, key_padding_mask, None, condition)
+        if attn_mask is not None:
+            x = self.layers[0](x, key_padding_mask, attn_mask, condition) # 只在第一层加入往后看的attention mask
+            causal_mask = torch.tril(torch.ones(x.size(1), x.size(1), device=x.device, dtype=torch.bool))
+            for layer in self.layers[1:]:
+                x = layer(x, key_padding_mask, causal_mask, condition)
+        else:
+            for layer in self.layers:
+                x = layer(x, key_padding_mask, None, condition)
 
         if self.use_cln: # use_cln即是否使用加入条件的LayerNorm
             x = self.last_ln(x, condition)

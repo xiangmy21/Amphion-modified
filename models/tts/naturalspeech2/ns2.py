@@ -181,6 +181,7 @@ class NaturalSpeech2(nn.Module):
                 flow=flow,
             )
             prior_condition = prior_out["prior_out"]  # (B, T, d) d是条件的特征维度,512
+            print("Frames: ", prior_condition.shape[1])
             # print("latent_dim:", self.latent_dim) # default: 128
         with Timer() as t:
             t.name = "Diffusion"
