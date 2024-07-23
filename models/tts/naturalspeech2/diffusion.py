@@ -140,6 +140,33 @@ class Diffusion(nn.Module):
             
         return xt
 
+    @torch.no_grad()
+    def block_reverse_diffusion(self, z, x_mask, cond, n_timesteps, spk_query_emb): # x_mask=None
+        h = 1.0 / max(n_timesteps, 1)
+        xt = z
+        
+        views = get_views(z.shape[-1], window_size=self.cfg.window_size, stride=self.cfg.window_size)
+        for t_start, t_end in views:
+            latent_view = xt[:, :, t_start:t_end]
+            cond_view = cond[:, t_start:t_end, :]
+            for i in range(n_timesteps):
+                t = (1.0 - (i + 0.5) * h) * torch.ones(
+                latent_view.shape[0], dtype=latent_view.dtype, device=latent_view.device
+                )
+                dxt = self.cal_dxt(latent_view, x_mask, cond_view, spk_query_emb, diffusion_step=t, h=h) # need to consider carefully
+                latent_view_denoised = latent_view - dxt
+
+                if self.cfg.ode_solver == "midpoint":
+                    latent_view_denoised_mid = 0.5 * (latent_view_denoised + latent_view)
+                    dxt = self.cal_dxt(
+                        latent_view_denoised_mid, x_mask, cond_view, spk_query_emb, diffusion_step=t + 0.5 * h, h=h
+                    )
+                    latent_view = latent_view - dxt
+                elif self.cfg.ode_solver == "euler":
+                    latent_view = latent_view_denoised
+            xt[:, :, t_start:t_end] = latent_view
+
+        return xt
 
     @torch.no_grad()
     def reverse_diffusion_from_t(

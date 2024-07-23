@@ -37,7 +37,7 @@
     "model": {
         "latent_dim": 128,
         "prior_encoder": {
-            "look_ahead": 0,
+            "look_ahead": 5,
             "dur_blk_size": 6,
             "dur_blk_padding": 2,
             "pit_blk_size": 75,
@@ -75,8 +75,8 @@
             }
         },
         "diffusion": {
-            "window_size": 128,
-            "stride": 64,
+            "window_size": 60,
+            "stride": 60,
             "wavenet": {
                 "input_size": 128,
                 "hidden_size": 512,
