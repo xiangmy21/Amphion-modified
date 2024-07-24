@@ -74,9 +74,11 @@
                 "drop_out": 0.5
             }
         },
+        "dec_blk_size": 128,
+        "dec_blk_padding": 64,
         "diffusion": {
-            "window_size": 60,
-            "stride": 60,
+            "window_size": 128,
+            "stride": 64,
             "wavenet": {
                 "input_size": 128,
                 "hidden_size": 512,

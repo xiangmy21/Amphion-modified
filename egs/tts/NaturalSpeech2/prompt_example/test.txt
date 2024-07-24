@@ -1,1 +1,1 @@
-You can’t be perfect but you can be unique
+The value of a state is the expected discounted return the agent can get if it starts in that state.

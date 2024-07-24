@@ -98,8 +98,10 @@ class NS2Inference:
             phone_id = torch.from_numpy(phone_id).unsqueeze(0).to(device=self.args.device)
             print("Phone nums: ", phone_id.shape[-1])
 
+        flow = True
+
         x0, prior_out = self.model.inference(
-            ref_code, phone_id, ref_mask, self.args.inference_step, flow=True
+            ref_code, phone_id, ref_mask, self.args.inference_step, flow=flow
         )
         # print(prior_out["dur_pred"]) 
         # print(prior_out["dur_pred_round"]) # (1, N) 每个音素的持续帧数
@@ -107,14 +109,21 @@ class NS2Inference:
         
         with Timer() as t:
             t.name = "Decoder"
-            latent_ref = self.codec.quantizer.vq.decode(ref_code.transpose(0, 1)) # (B, 128, T)
-            rec_wav = self.codec.decoder(x0) # x0: (1, 128, T), rec_wav: (1, 1, L)
-        # ref_wav = self.codec.decoder(latent_ref)
-        # rec_wav_chunks = torch.zeros(1, 1, 0).to(x0.device)
-        # for i in range(0, x0.shape[-1], 120):
-        #     chunk = x0[:, :, i:min(i+120, x0.shape[-1])]
-        #     rec_chunk = self.codec.decoder(chunk)
-        #     rec_wav_chunks = torch.cat([rec_wav_chunks, rec_chunk], dim=-1)
+            # latent_ref = self.codec.quantizer.vq.decode(ref_code.transpose(0, 1)) # (B, 128, T)
+            # ref_wav = self.codec.decoder(latent_ref)
+            if not flow:
+                rec_wav = self.codec.decoder(x0) # x0: (1, 128, T), rec_wav: (1, 1, L) L = T*320
+            else:
+                samples_per_frame = 320
+                rec_wav_chunks = torch.zeros(1, 1, x0.shape[-1]*samples_per_frame).to(x0.device)
+                blk_size = self.cfg.model.dec_blk_size
+                padding = self.cfg.model.dec_blk_padding
+                for i in range(0, x0.shape[-1], blk_size):
+                    view = slice(max(0, i-padding), min(i+blk_size+padding, x0.shape[-1]))
+                    save_view = slice(i*samples_per_frame, min(i+blk_size, x0.shape[-1])*samples_per_frame)
+                    get_view = slice(min(i, padding)*samples_per_frame, min(i, padding)*samples_per_frame + save_view.stop - save_view.start)
+                    rec_chunk = self.codec.decoder(x0[:, :, view])
+                    rec_wav_chunks[:, :, save_view] = rec_chunk[:, :, get_view]
 
         print("look_ahead: ", self.cfg.model.prior_encoder.look_ahead)
         print("dur_blk_size: ", self.cfg.model.prior_encoder.dur_blk_size)
@@ -123,24 +132,27 @@ class NS2Inference:
         print("pit_blk_padding: ", self.cfg.model.prior_encoder.pit_blk_padding)
         print("multidiffuion window_size: ", self.cfg.model.diffusion.window_size)
         print("multidiffuion stride: ", self.cfg.model.diffusion.stride)
-        print("Write to file {}".format("out_"+self.args.ref_audio.split('/')[-1].split('.')[0]))
+        print("dec_blk_size: ", self.cfg.model.dec_blk_size)
+        print("dec_blk_padding: ", self.cfg.model.dec_blk_padding)
+        print("Write to file {}".format("out_"+("chunks_" if flow else "")+self.args.ref_audio.split('/')[-1].split('.')[0]))
         os.makedirs(self.args.output_dir, exist_ok=True)
 
-        sf.write(
-            "{}/{}.wav".format(
-                self.args.output_dir, "out_"+self.args.ref_audio.split('/')[-1].split('.')[0]
-            ),
-            rec_wav[0, 0].detach().cpu().numpy(),
-            samplerate=24000,
-        )
-        # chunks: 120帧一段
-        # sf.write(
-        #     "{}/{}.wav".format(
-        #         self.args.output_dir, "out_chunks_"+self.args.ref_audio.split('/')[-1].split('.')[0]
-        #     ),
-        #     rec_wav_chunks[0, 0].detach().cpu().numpy(),
-        #     samplerate=24000,
-        # )
+        if not flow:
+            sf.write(
+                "{}/{}.wav".format(
+                    self.args.output_dir, "out_"+self.args.ref_audio.split('/')[-1].split('.')[0]
+                ),
+                rec_wav[0, 0].detach().cpu().numpy(),
+                samplerate=24000,
+            )
+        else:
+            sf.write(
+                "{}/{}.wav".format(
+                    self.args.output_dir, "out_chunks_"+self.args.ref_audio.split('/')[-1].split('.')[0]
+                ),
+                rec_wav_chunks[0, 0].detach().cpu().numpy(),
+                samplerate=24000,
+            )
 
     def add_arguments(parser: argparse.ArgumentParser):
         parser.add_argument(
