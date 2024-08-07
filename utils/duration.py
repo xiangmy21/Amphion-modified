@@ -58,8 +58,17 @@ def get_duration(utt, wav, cfg):
     basename = utt["Uid"]
     dataset = utt["Dataset"]
     sample_rate = cfg["sample_rate"]
-
-    distribution, _, paragraph, uid = basename.split("#")
+    
+    # Modify according to actual needs.
+    if dataset == "libritts":
+        distribution, _, paragraph, uid = basename.split("#")
+        tg_path = os.path.join(
+            cfg.textgrid_dir, speaker, paragraph, "{}.TextGrid".format(uid)
+        )
+    else:
+        tg_path = os.path.join(
+            cfg.textgrid_dir, speaker, "{}.TextGrid".format(basename)
+        )
 
     # print(cfg.processed_dir, dataset, speaker, basename)
     # wav_path = os.path.join(
@@ -71,9 +80,7 @@ def get_duration(utt, wav, cfg):
     # tg_path = os.path.join(
     #     cfg.processed_dir, dataset, "TextGrid", distribution, speaker, paragraph, "{}.TextGrid".format(uid)
     # )
-    tg_path = os.path.join(
-        cfg.textgrid_dir, speaker, paragraph, "{}.TextGrid".format(uid)
-    )
+
 
     # # Read raw text
     # with open(text_path, "r") as f:
