@@ -110,7 +110,7 @@
             "hidden_size": 512,
             "head_num": 8
         },
-        "inference_step": 500
+        "inference_step": 50
     },
     "train": {
         "use_dynamic_batchsize": true,

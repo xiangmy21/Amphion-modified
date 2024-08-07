@@ -98,18 +98,14 @@ def main():
             new_datasets_list.extend(filter(None, new_datasets))
         cfg.dataset.extend(new_datasets_list)
 
-    print("where7?")
     # # CUDA settings
     cuda_relevant()
 
-    print("where8?")
     # Build trainer
     trainer = build_trainer(args, cfg)
-    print("where9?")
     torch.set_num_threads(1)
-    print("where10?")
     torch.set_num_interop_threads(1)
-    print("where11?")
+    
     trainer.train_loop()
 
 
