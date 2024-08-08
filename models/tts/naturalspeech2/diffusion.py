@@ -167,6 +167,10 @@ class Diffusion(nn.Module):
             xt[:, :, t_start:t_end] = latent_view
 
         return xt
+    
+    @torch.no_grad()
+    def ladder_reverse_diffusion(self, z, x_mask, cond, n_timesteps, spk_query_emb):
+        pass
 
     @torch.no_grad()
     def reverse_diffusion_from_t(
