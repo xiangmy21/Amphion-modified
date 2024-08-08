@@ -1,15 +1,15 @@
 {
     "base_config": "egs/tts/NaturalSpeech2/exp_config_base.json",
     "dataset": [
-      "libritts"
+      "LJSpeech"
     ],
     "dataset_path": {
-      "libritts": "/home/srt15/LibriTTS"
+      "LJSpeech": "/home/srt15/LJSpeech"
     },
     "preprocess": {
       "processed_dir": "data",
-      "textgrid_dir": "/home/srt15/amphion/data/libritts/TextGrid",
-      "train_file": "train_final_clean.json",
+      "textgrid_dir": "/home/srt15/LJSpeech/TextGrid/",
+      "train_file": "train.json",
       "valid_file": "valid.json",
       "read_metadata": false,
       "metadata_dir": "metadata"
