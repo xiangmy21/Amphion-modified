@@ -4,7 +4,7 @@
       "LJSpeech"
     ],
     "dataset_path": {
-      "LJSpeech": "/mnt/nvme_share/test004/LJSpeech"
+      "LJSpeech": "/mnt/nvme_share/test004/LJSpeech_24k"
     },
     "preprocess": {
       "processed_dir": "data",

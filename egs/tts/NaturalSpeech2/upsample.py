@@ -4,8 +4,8 @@ import os
 from tqdm import tqdm
 
 # 定义路径
-input_dir = '/mnt/nvme_share/test004/LJSpeech'
-output_dir = '/mnt/nvme_share/test004/LJSpeech_24k'
+input_dir = '/mnt/nvme_share/test004/LJSpeech/wavs'
+output_dir = '/mnt/nvme_share/test004/LJSpeech_24k/wavs'
 os.makedirs(output_dir, exist_ok=True)
 
 # 定义上采样的转换器
