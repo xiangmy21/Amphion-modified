@@ -4,11 +4,11 @@
       "LJSpeech"
     ],
     "dataset_path": {
-      "LJSpeech": "/home/srt15/LJSpeech"
+      "LJSpeech": "/mnt/nvme_share/test004/LJSpeech"
     },
     "preprocess": {
       "processed_dir": "data",
-      "textgrid_dir": "/home/srt15/LJSpeech/TextGrid/",
+      "textgrid_dir": "/mnt/nvme_share/test004/LJSpeech/TextGrid/",
       "train_file": "train.json",
       "valid_file": "valid.json",
       "read_metadata": false,

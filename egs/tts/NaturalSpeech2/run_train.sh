@@ -16,7 +16,7 @@ export PYTHONIOENCODING=UTF-8
 exp_config="$exp_dir/exp_config.json"
 exp_name="LJSpeech"
 
-# python bins/tts/preprocess.py --config=/home/srt15/amphion/egs/tts/NaturalSpeech2/exp_config.json
+# python bins/tts/preprocess.py --config=/mnt/nvme_share/test004/amphion/egs/tts/NaturalSpeech2/exp_config.json
 
 ######## Train Model ###########
 CUDA_VISIBLE_DEVICES="1" accelerate launch \

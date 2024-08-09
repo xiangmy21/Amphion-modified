@@ -8,8 +8,8 @@ from tqdm import tqdm
 from glob import glob
 from collections import defaultdict
 
-output_path = "/home/srt15/amphion/data/LJSpeech"
-dataset_path = "/home/srt15/LJSpeech"
+output_path = "/mnt/nvme_share/test004/amphion/data/LJSpeech"
+dataset_path = "/mnt/nvme_share/test004/LJSpeech"
 dataset="LJSpeech" # "LJSpeech" or "LibriTTS"
 
 def libritts_statistics(data_dir):

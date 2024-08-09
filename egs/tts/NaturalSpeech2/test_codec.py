@@ -24,7 +24,7 @@ class TestCodec:
         return encodec_model
 
     def get_ref_code(self):
-        ref_wav_path = "/home/srt15/amphion/egs/tts/NaturalSpeech2/prompt_example/cry.mp3"
+        ref_wav_path = "/mnt/nvme_share/test004/amphion/egs/tts/NaturalSpeech2/prompt_example/cry.mp3"
         ref_wav, sr = torchaudio.load(ref_wav_path)
         ref_wav = convert_audio(
             ref_wav, sr, self.codec.sample_rate, self.codec.channels

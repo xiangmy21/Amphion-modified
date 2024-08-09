@@ -1,8 +1,8 @@
 import json
 
-train_file_path = "/home/srt15/amphion/data/libritts/train.json"
-missing_file_path = "/home/srt15/LibriTTSLabel-master/missing_files.txt"
-new_train_file_path = "/home/srt15/amphion/data/libritts/train_miss.json"
+train_file_path = "/mnt/nvme_share/test004/amphion/data/libritts/train.json"
+missing_file_path = "/mnt/nvme_share/test004/LibriTTSLabel-master/missing_files.txt"
+new_train_file_path = "/mnt/nvme_share/test004/amphion/data/libritts/train_miss.json"
 
 # 读取并处理 B 文件
 with open(missing_file_path, 'r') as f:

@@ -5,4 +5,4 @@ export WORK_DIR=$work_dir
 export PYTHONPATH=$work_dir
 export PYTHONIOENCODING=UTF-8
 
-python "${work_dir}"/bins/tts/preprocess.py --config=/home/srt15/amphion/egs/tts/NaturalSpeech2/exp_config.json
+python "${work_dir}"/bins/tts/preprocess.py --config=/mnt/nvme_share/test004/amphion/egs/tts/NaturalSpeech2/exp_config.json

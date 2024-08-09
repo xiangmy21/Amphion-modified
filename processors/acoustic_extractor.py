@@ -259,13 +259,17 @@ def extract_utt_acoustic_features_tts(dataset_output, cfg, utt):
         #     return
         # extract features
         if cfg.preprocess.extract_duration:
-            durations, phones, start, end = duration.get_duration(
-                utt, wav, cfg.preprocess
-            )
-            save_feature(dataset_output, cfg.preprocess.duration_dir, uid, durations)
-            save_txt(dataset_output, cfg.preprocess.phone_dir, uid, phones)
-            wav = wav[start:end].astype(np.float32)
-            wav_torch = torch.from_numpy(wav).to(wav_torch.device)
+            try:
+                durations, phones, start, end = duration.get_duration(
+                    utt, wav, cfg.preprocess
+                )
+                save_feature(dataset_output, cfg.preprocess.duration_dir, uid, durations)
+                save_txt(dataset_output, cfg.preprocess.phone_dir, uid, phones)
+                wav = wav[start:end].astype(np.float32)
+                wav_torch = torch.from_numpy(wav).to(wav_torch.device)
+            except Exception as e:
+                print("\033[91mError in get_duration:\033[0m", e)
+                return
 
         if cfg.preprocess.extract_linear_spec:
             from utils.mel import extract_linear_features

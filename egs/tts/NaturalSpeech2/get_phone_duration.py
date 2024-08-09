@@ -4,8 +4,8 @@ from tqdm import tqdm
 from glob import glob
 from collections import defaultdict
 
-output_path = "/home/srt15/hs/LatentDiffusion/amphion/data/libritts"
-dataset_path = "/home/srt15/hs/LatentDiffusion/amphion/LibriTTSLabel-master/lab/phone"
+output_path = "/mnt/nvme_share/test004/hs/LatentDiffusion/amphion/data/libritts"
+dataset_path = "/mnt/nvme_share/test004/hs/LatentDiffusion/amphion/LibriTTSLabel-master/lab/phone"
 phone_path = os.path.join(output_path, "phone")
 os.makedirs(phone_path, exist_ok=True)
 duration_path = os.path.join(output_path, "duration")
@@ -114,6 +114,6 @@ def main():
                     
     
 if __name__ == "__main__":
-    # code = np.load("/home/srt15/amphion/data/libritts/code/train-clean-100#19#198#19_198_000000_000000.npy")
+    # code = np.load("/mnt/nvme_share/test004/amphion/data/libritts/code/train-clean-100#19#198#19_198_000000_000000.npy")
     # print(code[0].shape)
     main()

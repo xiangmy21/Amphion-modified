@@ -16,11 +16,11 @@ pip install tensorboard tensorboardX torch==2.0.1 torchaudio==2.0.2 torchvision=
 
 pip install torchmetrics pymcd openai-whisper frechet_audio_distance asteroid resemblyzer vector-quantize-pytorch==1.12.5
 
-pip install https://github.com/vBaiCai/python-pesq/archive/master.zip
+pip install pypesq
 
 pip install fairseq
 
-pip install git+https://github.com/lhotse-speech/lhotse
+pip install lhotse
 
 pip install -U encodec
 

@@ -2,7 +2,7 @@ import json
 import os
 
 # 设置train.json和TextGrid文件夹的路径
-base_path = '/home/srt15/amphion/data/LJSpeech'
+base_path = '/mnt/nvme_share/test004/amphion/data/LJSpeech'
 
 ignore_first_part = False # 是否忽略uid第一个#前内容（建立文件夹时）
 

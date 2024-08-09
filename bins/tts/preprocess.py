@@ -110,9 +110,9 @@ def preprocess(cfg, args):
         if args.prepare_alignment:
             # Prepare alignment with MFA
             print("Prepare alignment {}...".format(dataset))
-            prepare_align(
-                dataset, cfg.dataset_path[dataset], cfg.preprocess, output_path
-            )
+            # prepare_align(
+            #     dataset, cfg.dataset_path[dataset], cfg.preprocess, output_path
+            # )
 
         preprocess_dataset(
             dataset,
